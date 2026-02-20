@@ -1,29 +1,16 @@
 const express = require('express');
 const router = express.Router();
+const invoiceController = require('../controllers/invoiceController');
+const { invoiceRules } = require('../validators/invoiceValidator');
+const validate = require('../middlewares/validate');
+const authMiddleware = require('../middlewares/authMiddleware');
 
-// GET /api/v1/invoices
-router.get('/', (req, res) => {
-    res.json({ success: true, message: 'List invoices — coming soon', data: [] });
-});
+router.use(authMiddleware);
 
-// GET /api/v1/invoices/:id
-router.get('/:id', (req, res) => {
-    res.json({ success: true, message: 'Get invoice — coming soon' });
-});
-
-// POST /api/v1/invoices
-router.post('/', (req, res) => {
-    res.json({ success: true, message: 'Create invoice — coming soon' });
-});
-
-// PUT /api/v1/invoices/:id
-router.put('/:id', (req, res) => {
-    res.json({ success: true, message: 'Update invoice — coming soon' });
-});
-
-// DELETE /api/v1/invoices/:id
-router.delete('/:id', (req, res) => {
-    res.json({ success: true, message: 'Delete invoice — coming soon' });
-});
+router.post('/', invoiceRules, validate, invoiceController.create);
+router.get('/', invoiceController.findAll);
+router.get('/:id', invoiceController.findById);
+router.put('/:id', invoiceController.update);
+router.delete('/:id', invoiceController.remove);
 
 module.exports = router;

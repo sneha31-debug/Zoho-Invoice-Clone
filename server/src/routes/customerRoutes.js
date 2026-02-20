@@ -1,29 +1,17 @@
 const express = require('express');
 const router = express.Router();
+const customerController = require('../controllers/customerController');
+const { customerRules } = require('../validators/customerValidator');
+const validate = require('../middlewares/validate');
+const authMiddleware = require('../middlewares/authMiddleware');
 
-// GET /api/v1/customers
-router.get('/', (req, res) => {
-    res.json({ success: true, message: 'List customers — coming soon', data: [] });
-});
+// All customer routes are protected
+router.use(authMiddleware);
 
-// GET /api/v1/customers/:id
-router.get('/:id', (req, res) => {
-    res.json({ success: true, message: 'Get customer — coming soon' });
-});
-
-// POST /api/v1/customers
-router.post('/', (req, res) => {
-    res.json({ success: true, message: 'Create customer — coming soon' });
-});
-
-// PUT /api/v1/customers/:id
-router.put('/:id', (req, res) => {
-    res.json({ success: true, message: 'Update customer — coming soon' });
-});
-
-// DELETE /api/v1/customers/:id
-router.delete('/:id', (req, res) => {
-    res.json({ success: true, message: 'Delete customer — coming soon' });
-});
+router.post('/', customerRules, validate, customerController.create);
+router.get('/', customerController.findAll);
+router.get('/:id', customerController.findById);
+router.put('/:id', customerRules, validate, customerController.update);
+router.delete('/:id', customerController.remove);
 
 module.exports = router;

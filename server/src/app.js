@@ -8,6 +8,7 @@ const errorHandler = require('./middlewares/errorHandler');
 const authRoutes = require('./routes/authRoutes');
 const invoiceRoutes = require('./routes/invoiceRoutes');
 const customerRoutes = require('./routes/customerRoutes');
+const itemRoutes = require('./routes/itemRoutes');
 const quoteRoutes = require('./routes/quoteRoutes');
 const paymentRoutes = require('./routes/paymentRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
@@ -31,6 +32,7 @@ app.get('/api/v1/health', (req, res) => {
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/invoices', invoiceRoutes);
 app.use('/api/v1/customers', customerRoutes);
+app.use('/api/v1/items', itemRoutes);
 app.use('/api/v1/quotes', quoteRoutes);
 app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/expenses', expenseRoutes);
