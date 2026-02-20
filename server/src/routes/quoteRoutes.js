@@ -1,24 +1,15 @@
 const express = require('express');
 const router = express.Router();
+const quoteController = require('../controllers/quoteController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
-router.get('/', (req, res) => {
-    res.json({ success: true, message: 'List quotes — coming soon', data: [] });
-});
+router.use(authMiddleware);
 
-router.get('/:id', (req, res) => {
-    res.json({ success: true, message: 'Get quote — coming soon' });
-});
-
-router.post('/', (req, res) => {
-    res.json({ success: true, message: 'Create quote — coming soon' });
-});
-
-router.put('/:id', (req, res) => {
-    res.json({ success: true, message: 'Update quote — coming soon' });
-});
-
-router.delete('/:id', (req, res) => {
-    res.json({ success: true, message: 'Delete quote — coming soon' });
-});
+router.post('/', quoteController.create);
+router.get('/', quoteController.findAll);
+router.get('/:id', quoteController.findById);
+router.put('/:id', quoteController.update);
+router.delete('/:id', quoteController.remove);
+router.post('/:id/convert', quoteController.convertToInvoice);
 
 module.exports = router;

@@ -1,24 +1,14 @@
 const express = require('express');
 const router = express.Router();
+const expenseController = require('../controllers/expenseController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
-router.get('/', (req, res) => {
-    res.json({ success: true, message: 'List expenses — coming soon', data: [] });
-});
+router.use(authMiddleware);
 
-router.get('/:id', (req, res) => {
-    res.json({ success: true, message: 'Get expense — coming soon' });
-});
-
-router.post('/', (req, res) => {
-    res.json({ success: true, message: 'Create expense — coming soon' });
-});
-
-router.put('/:id', (req, res) => {
-    res.json({ success: true, message: 'Update expense — coming soon' });
-});
-
-router.delete('/:id', (req, res) => {
-    res.json({ success: true, message: 'Delete expense — coming soon' });
-});
+router.post('/', expenseController.create);
+router.get('/', expenseController.findAll);
+router.get('/:id', expenseController.findById);
+router.put('/:id', expenseController.update);
+router.delete('/:id', expenseController.remove);
 
 module.exports = router;
