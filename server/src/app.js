@@ -1,0 +1,49 @@
+const express = require('express');
+const cors = require('cors');
+const morgan = require('morgan');
+const { PORT } = require('./config/env');
+const errorHandler = require('./middlewares/errorHandler');
+
+// Import routes
+const authRoutes = require('./routes/authRoutes');
+const invoiceRoutes = require('./routes/invoiceRoutes');
+const customerRoutes = require('./routes/customerRoutes');
+const quoteRoutes = require('./routes/quoteRoutes');
+const paymentRoutes = require('./routes/paymentRoutes');
+const expenseRoutes = require('./routes/expenseRoutes');
+const timeTrackingRoutes = require('./routes/timeTrackingRoutes');
+const reportRoutes = require('./routes/reportRoutes');
+
+const app = express();
+
+// ─── Global Middleware ───────────────────────────────────
+app.use(cors());
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(morgan('dev'));
+
+// ─── Health Check ────────────────────────────────────────
+app.get('/api/v1/health', (req, res) => {
+    res.json({ success: true, message: 'Zoho Invoice Clone API is running 🚀' });
+});
+
+// ─── API Routes ──────────────────────────────────────────
+app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/invoices', invoiceRoutes);
+app.use('/api/v1/customers', customerRoutes);
+app.use('/api/v1/quotes', quoteRoutes);
+app.use('/api/v1/payments', paymentRoutes);
+app.use('/api/v1/expenses', expenseRoutes);
+app.use('/api/v1/time-tracking', timeTrackingRoutes);
+app.use('/api/v1/reports', reportRoutes);
+
+// ─── Error Handler (must be last) ────────────────────────
+app.use(errorHandler);
+
+// ─── Start Server ────────────────────────────────────────
+app.listen(PORT, () => {
+    console.log(`🚀 Server running on http://localhost:${PORT}`);
+    console.log(`📋 Health check: http://localhost:${PORT}/api/v1/health`);
+});
+
+module.exports = app;

@@ -1,5 +1,4 @@
 // Zoho Invoice Clone — Prisma Schema
-// Models will be added in upcoming steps.
 
 generator client {
   provider = "prisma-client-js"
@@ -8,4 +7,445 @@ generator client {
 datasource db {
   provider = "postgresql"
   url      = env("DATABASE_URL")
+}
+
+// ─── Enums ───────────────────────────────────────────────
+
+enum Role {
+  ADMIN
+  MANAGER
+  STAFF
+  VIEWER
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  VIEWED
+  PARTIALLY_PAID
+  PAID
+  OVERDUE
+  VOID
+}
+
+enum QuoteStatus {
+  DRAFT
+  SENT
+  ACCEPTED
+  DECLINED
+  EXPIRED
+  CONVERTED
+}
+
+enum PaymentMethod {
+  CREDIT_CARD
+  BANK_TRANSFER
+  PAYPAL
+  STRIPE
+  CASH
+  CHECK
+  OTHER
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
+
+enum ExpenseCategory {
+  TRAVEL
+  MEALS
+  SUPPLIES
+  UTILITIES
+  RENT
+  SOFTWARE
+  MARKETING
+  MILEAGE
+  OTHER
+}
+
+enum Currency {
+  USD
+  EUR
+  GBP
+  INR
+  AUD
+  CAD
+  JPY
+  CNY
+  SGD
+  AED
+}
+
+// ─── Organization ────────────────────────────────────────
+
+model Organization {
+  id        String   @id @default(uuid())
+  name      String
+  email     String?
+  phone     String?
+  website   String?
+  logo      String?  // URL to logo image
+  address   String?
+  city      String?
+  state     String?
+  country   String?
+  zipCode   String?
+  taxId     String?
+  currency  Currency @default(USD)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users             User[]
+  customers         Customer[]
+  items             Item[]
+  invoices          Invoice[]
+  quotes            Quote[]
+  payments          Payment[]
+  expenses          Expense[]
+  timeEntries       TimeEntry[]
+  creditNotes       CreditNote[]
+  recurringInvoices RecurringInvoice[]
+
+  @@map("organizations")
+}
+
+// ─── User ────────────────────────────────────────────────
+
+model User {
+  id             String   @id @default(uuid())
+  email          String   @unique
+  password       String
+  firstName      String
+  lastName       String
+  phone          String?
+  role           Role     @default(STAFF)
+  isActive       Boolean  @default(true)
+  profilePicture String?
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  expenses     Expense[]
+  timeEntries  TimeEntry[]
+  activityLogs ActivityLog[]
+
+  @@map("users")
+}
+
+// ─── Customer ────────────────────────────────────────────
+
+model Customer {
+  id            String   @id @default(uuid())
+  displayName   String
+  email         String?
+  phone         String?
+  companyName   String?
+  billingAddress  String?
+  billingCity     String?
+  billingState    String?
+  billingCountry  String?
+  billingZipCode  String?
+  shippingAddress String?
+  shippingCity    String?
+  shippingState   String?
+  shippingCountry String?
+  shippingZipCode String?
+  currency      Currency @default(USD)
+  notes         String?
+  isActive      Boolean  @default(true)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  invoices          Invoice[]
+  quotes            Quote[]
+  payments          Payment[]
+  expenses          Expense[]
+  timeEntries       TimeEntry[]
+  creditNotes       CreditNote[]
+  recurringInvoices RecurringInvoice[]
+
+  @@map("customers")
+}
+
+// ─── Item (Product / Service Catalog) ────────────────────
+
+model Item {
+  id          String  @id @default(uuid())
+  name        String
+  description String?
+  sku         String?
+  rate        Float
+  unit        String?   // e.g. "hrs", "qty", "pcs"
+  taxRate     Float     @default(0)
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  invoiceItems InvoiceItem[]
+  quoteItems   QuoteItem[]
+
+  @@map("items")
+}
+
+// ─── Invoice ─────────────────────────────────────────────
+
+model Invoice {
+  id              String        @id @default(uuid())
+  invoiceNumber   String
+  status          InvoiceStatus @default(DRAFT)
+  issueDate       DateTime      @default(now())
+  dueDate         DateTime
+  currency        Currency      @default(USD)
+  subtotal        Float         @default(0)
+  taxAmount       Float         @default(0)
+  discountAmount  Float         @default(0)
+  totalAmount     Float         @default(0)
+  amountPaid      Float         @default(0)
+  balanceDue      Float         @default(0)
+  notes           String?
+  terms           String?
+  customFields    Json?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  items        InvoiceItem[]
+  payments     Payment[]
+  creditNotes  CreditNote[]
+  activityLogs ActivityLog[]
+
+  @@unique([organizationId, invoiceNumber])
+  @@map("invoices")
+}
+
+model InvoiceItem {
+  id          String @id @default(uuid())
+  description String?
+  quantity    Float  @default(1)
+  rate        Float
+  taxRate     Float  @default(0)
+  amount      Float
+  createdAt   DateTime @default(now())
+
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  itemId String?
+  item   Item?  @relation(fields: [itemId], references: [id])
+
+  @@map("invoice_items")
+}
+
+// ─── Quote / Estimate ────────────────────────────────────
+
+model Quote {
+  id            String      @id @default(uuid())
+  quoteNumber   String
+  status        QuoteStatus @default(DRAFT)
+  issueDate     DateTime    @default(now())
+  expiryDate    DateTime
+  currency      Currency    @default(USD)
+  subtotal      Float       @default(0)
+  taxAmount     Float       @default(0)
+  discountAmount Float      @default(0)
+  totalAmount   Float       @default(0)
+  notes         String?
+  terms         String?
+  customFields  Json?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  items QuoteItem[]
+
+  @@unique([organizationId, quoteNumber])
+  @@map("quotes")
+}
+
+model QuoteItem {
+  id          String @id @default(uuid())
+  description String?
+  quantity    Float  @default(1)
+  rate        Float
+  taxRate     Float  @default(0)
+  amount      Float
+  createdAt   DateTime @default(now())
+
+  quoteId String
+  quote   Quote @relation(fields: [quoteId], references: [id], onDelete: Cascade)
+
+  itemId String?
+  item   Item?  @relation(fields: [itemId], references: [id])
+
+  @@map("quote_items")
+}
+
+// ─── Payment ─────────────────────────────────────────────
+
+model Payment {
+  id            String        @id @default(uuid())
+  paymentNumber String
+  amount        Float
+  paymentDate   DateTime      @default(now())
+  method        PaymentMethod @default(OTHER)
+  status        PaymentStatus @default(COMPLETED)
+  reference     String?       // Transaction ID, check number, etc.
+  notes         String?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+
+  @@map("payments")
+}
+
+// ─── Expense ─────────────────────────────────────────────
+
+model Expense {
+  id          String          @id @default(uuid())
+  date        DateTime        @default(now())
+  category    ExpenseCategory @default(OTHER)
+  amount      Float
+  currency    Currency        @default(USD)
+  merchant    String?
+  description String?
+  receiptUrl  String?
+  isBillable  Boolean         @default(false)
+  mileage     Float?
+  notes       String?
+  createdAt   DateTime        @default(now())
+  updatedAt   DateTime        @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  @@map("expenses")
+}
+
+// ─── Time Entry ──────────────────────────────────────────
+
+model TimeEntry {
+  id          String   @id @default(uuid())
+  date        DateTime @default(now())
+  hours       Float
+  description String?
+  isBillable  Boolean  @default(true)
+  isBilled    Boolean  @default(false)
+  hourlyRate  Float?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id])
+
+  @@map("time_entries")
+}
+
+// ─── Credit Note ─────────────────────────────────────────
+
+model CreditNote {
+  id               String   @id @default(uuid())
+  creditNoteNumber String
+  amount           Float
+  date             DateTime @default(now())
+  reason           String?
+  notes            String?
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id])
+
+  @@map("credit_notes")
+}
+
+// ─── Recurring Invoice ───────────────────────────────────
+
+model RecurringInvoice {
+  id            String   @id @default(uuid())
+  profileName   String
+  frequency     String   // e.g. "weekly", "monthly", "yearly"
+  startDate     DateTime
+  endDate       DateTime?
+  nextInvoiceDate DateTime?
+  currency      Currency @default(USD)
+  subtotal      Float    @default(0)
+  taxAmount     Float    @default(0)
+  totalAmount   Float    @default(0)
+  isActive      Boolean  @default(true)
+  notes         String?
+  terms         String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  @@map("recurring_invoices")
+}
+
+// ─── Activity Log (Audit Trail) ──────────────────────────
+
+model ActivityLog {
+  id        String   @id @default(uuid())
+  action    String   // e.g. "created", "sent", "viewed", "paid"
+  details   String?
+  createdAt DateTime @default(now())
+
+  invoiceId String
+  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  userId String?
+  user   User?  @relation(fields: [userId], references: [id])
+
+  @@map("activity_logs")
 }
