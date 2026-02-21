@@ -339,6 +339,7 @@ model Expense {
   description String?
   receiptUrl  String?
   isBillable  Boolean         @default(false)
+  isBilled    Boolean         @default(false)
   mileage     Float?
   notes       String?
   createdAt   DateTime        @default(now())

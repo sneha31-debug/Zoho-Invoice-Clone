@@ -62,6 +62,7 @@ export const invoiceAPI = {
     create: (data) => api.post('/invoices', data),
     update: (id, data) => api.put(`/invoices/${id}`, data),
     delete: (id) => api.delete(`/invoices/${id}`),
+    fromBillable: (data) => api.post('/invoices/from-billable', data),
 };
 
 // Quotes

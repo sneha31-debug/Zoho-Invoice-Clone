@@ -46,10 +46,14 @@ app.use('/api/v1/recurring-invoices', recurringInvoiceRoutes);
 // ─── Error Handler (must be last) ────────────────────────
 app.use(errorHandler);
 
+// Cron jobs
+const { startRecurringInvoiceCron } = require('./cron/recurringInvoiceCron');
+
 // ─── Start Server ────────────────────────────────────────
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📋 Health check: http://localhost:${PORT}/api/v1/health`);
+    startRecurringInvoiceCron();
 });
 
 module.exports = app;

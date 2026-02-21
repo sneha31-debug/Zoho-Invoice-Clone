@@ -8,6 +8,7 @@ const authMiddleware = require('../middlewares/authMiddleware');
 router.use(authMiddleware);
 
 router.post('/', invoiceRules, validate, invoiceController.create);
+router.post('/from-billable', invoiceController.createFromBillable);
 router.get('/', invoiceController.findAll);
 router.get('/:id', invoiceController.findById);
 router.put('/:id', invoiceController.update);
