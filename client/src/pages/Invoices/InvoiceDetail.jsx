@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { invoiceAPI } from '../../services/api';
-import { HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlinePaperAirplane, HiOutlineTrash, HiOutlinePencil, HiOutlineClock } from 'react-icons/hi';
+import { HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlinePaperAirplane, HiOutlineTrash, HiOutlinePencil, HiOutlineClock, HiOutlinePrinter } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
 const statusBadge = (status) => {
@@ -58,6 +58,25 @@ const InvoiceDetail = () => {
         setActing(false);
     };
 
+    const handleDownloadPDF = async () => {
+        setActing(true);
+        try {
+            const res = await invoiceAPI.downloadPDF(id);
+            const url = window.URL.createObjectURL(new Blob([res.data]));
+            const link = document.createElement('a');
+            link.href = url;
+            link.setAttribute('download', `Invoice-${invoice.invoiceNumber}.pdf`);
+            document.body.appendChild(link);
+            link.click();
+            link.remove();
+            toast.success('PDF downloaded');
+        } catch (err) {
+            toast.error('Failed to download PDF');
+            console.error(err);
+        }
+        setActing(false);
+    };
+
     if (loading) return <div className="loading-spinner" />;
     if (!invoice) return <div className="empty-state"><h3>Invoice not found</h3></div>;
 
@@ -73,22 +92,31 @@ const InvoiceDetail = () => {
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     {statusBadge(invoice.status)}
-                    {invoice.status !== 'PAID' && (
-                        <button className="btn btn-primary btn-sm" onClick={handleMarkPaid} disabled={acting}>
-                            <HiOutlineCheckCircle /> Mark Paid
-                        </button>
+                    {user?.role !== 'VIEWER' && (
+                        <>
+                            {invoice.status !== 'PAID' && (
+                                <button className="btn btn-primary btn-sm" onClick={handleMarkPaid} disabled={acting}>
+                                    <HiOutlineCheckCircle /> Mark Paid
+                                </button>
+                            )}
+                            {invoice.status === 'DRAFT' && (
+                                <button className="btn btn-secondary btn-sm" onClick={handleMarkSent} disabled={acting}>
+                                    <HiOutlinePaperAirplane /> Mark Sent
+                                </button>
+                            )}
+                            <Link to={`/invoices/${id}/edit`} className="btn btn-secondary btn-sm">
+                                <HiOutlinePencil /> Edit
+                            </Link>
+                        </>
                     )}
-                    {invoice.status === 'DRAFT' && (
-                        <button className="btn btn-secondary btn-sm" onClick={handleMarkSent} disabled={acting}>
-                            <HiOutlinePaperAirplane /> Mark Sent
-                        </button>
-                    )}
-                    <Link to={`/invoices/${id}/edit`} className="btn btn-secondary btn-sm">
-                        <HiOutlinePencil /> Edit
-                    </Link>
-                    <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={acting}>
-                        <HiOutlineTrash /> Delete
+                    <button className="btn btn-secondary btn-sm" onClick={handleDownloadPDF} disabled={acting}>
+                        <HiOutlinePrinter /> PDF
                     </button>
+                    {user?.role !== 'VIEWER' && (
+                        <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={acting}>
+                            <HiOutlineTrash /> Delete
+                        </button>
+                    )}
                 </div>
             </div>
 

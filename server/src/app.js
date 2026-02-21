@@ -16,6 +16,7 @@ const timeTrackingRoutes = require('./routes/timeTrackingRoutes');
 const reportRoutes = require('./routes/reportRoutes');
 const creditNoteRoutes = require('./routes/creditNoteRoutes');
 const recurringInvoiceRoutes = require('./routes/recurringInvoiceRoutes');
+const notificationRoutes = require('./routes/notificationRoutes');
 
 const app = express();
 
@@ -42,18 +43,21 @@ app.use('/api/v1/time-tracking', timeTrackingRoutes);
 app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/credit-notes', creditNoteRoutes);
 app.use('/api/v1/recurring-invoices', recurringInvoiceRoutes);
+app.use('/api/v1/notifications', notificationRoutes);
 
 // ─── Error Handler (must be last) ────────────────────────
 app.use(errorHandler);
 
 // Cron jobs
 const { startRecurringInvoiceCron } = require('./cron/recurringInvoiceCron');
+const { startOverdueInvoiceCron } = require('./cron/overdueInvoiceCron');
 
 // ─── Start Server ────────────────────────────────────────
 app.listen(PORT, () => {
     console.log(`🚀 Server running on http://localhost:${PORT}`);
     console.log(`📋 Health check: http://localhost:${PORT}/api/v1/health`);
     startRecurringInvoiceCron();
+    startOverdueInvoiceCron();
 });
 
 module.exports = app;

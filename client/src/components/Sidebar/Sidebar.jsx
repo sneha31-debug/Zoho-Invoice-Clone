@@ -34,6 +34,12 @@ const Sidebar = () => {
         navigate('/login');
     };
 
+    const filteredNavItems = navItems.filter(({ path }) => {
+        if (['/users'].includes(path)) return ['ADMIN', 'MANAGER'].includes(user?.role);
+        // Settings can stay but maybe restricted inside? Let's leave for now as it contains profile too.
+        return true;
+    });
+
     return (
         <aside className="sidebar">
             <div className="sidebar-brand">
@@ -45,7 +51,7 @@ const Sidebar = () => {
             </div>
 
             <nav className="sidebar-nav">
-                {navItems.map(({ path, icon: Icon, label }) => (
+                {filteredNavItems.map(({ path, icon: Icon, label }) => (
                     <NavLink key={path} to={path} end={path === '/'} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
                         <Icon size={20} />
                         <span>{label}</span>

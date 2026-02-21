@@ -1,4 +1,5 @@
 const invoiceService = require('../services/invoiceService');
+const pdfService = require('../services/pdfService');
 
 const create = async (req, res, next) => {
     try {
@@ -111,4 +112,15 @@ const createFromBillable = async (req, res, next) => {
     } catch (error) { next(error); }
 };
 
-module.exports = { create, findAll, findById, update, remove, createFromBillable };
+const downloadPDF = async (req, res, next) => {
+    try {
+        const invoice = await invoiceService.findByIdForPDF(req.user.organizationId, req.params.id);
+        const pdfBuffer = await pdfService.generateInvoicePDF(invoice);
+
+        res.setHeader('Content-Type', 'application/pdf');
+        res.setHeader('Content-Disposition', `attachment; filename=Invoice-${invoice.invoiceNumber}.pdf`);
+        res.send(pdfBuffer);
+    } catch (error) { next(error); }
+};
+
+module.exports = { create, findAll, findById, update, remove, createFromBillable, downloadPDF };

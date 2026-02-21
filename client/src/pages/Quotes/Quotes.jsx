@@ -9,7 +9,9 @@ const statusBadge = (status) => {
 };
 
 const Quotes = () => {
+    const { user } = useAuth();
     const [data, setData] = useState({ quotes: [], total: 0 });
+ 
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
@@ -69,11 +71,17 @@ const Quotes = () => {
         <div className="fade-in">
             <div className="page-header">
                 <h1>Quotes ({data.total})</h1>
-                <button className="btn btn-primary" onClick={() => setShowModal(true)}><HiOutlinePlusCircle size={18} /> New Quote</button>
+                {user?.role !== 'VIEWER' && (
+                    <button className="btn btn-primary" onClick={() => setShowModal(true)}><HiOutlinePlusCircle size={18} /> New Quote</button>
+                )}
             </div>
             <div className="card">
                 {data.quotes.length === 0 ? (
-                    <div className="empty-state"><h3>No quotes yet</h3><p>Create a quote to send to your customer.</p></div>
+                    <div className="empty-state">
+                        <h3>No quotes yet</h3>
+                        <p>Create a quote to send to your customer.</p>
+                        {user?.role !== 'VIEWER' && <button className="btn btn-primary" onClick={() => setShowModal(true)}>Create Quote</button>}
+                    </div>
                 ) : (
                     <div className="table-container">
                         <table>
@@ -88,8 +96,12 @@ const Quotes = () => {
                                         <td>{new Date(q.createdAt).toLocaleDateString()}</td>
                                         <td>
                                             <div style={{ display: 'flex', gap: 8 }}>
-                                                {q.status !== 'CONVERTED' && <button className="btn btn-primary btn-sm" onClick={() => handleConvert(q.id)} title="Convert to Invoice"><HiOutlineSwitchHorizontal /></button>}
-                                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(q.id)}><HiOutlineTrash /></button>
+                                                {user?.role !== 'VIEWER' && q.status !== 'CONVERTED' && (
+                                                    <button className="btn btn-primary btn-sm" onClick={() => handleConvert(q.id)} title="Convert to Invoice"><HiOutlineSwitchHorizontal /></button>
+                                                )}
+                                                {user?.role !== 'VIEWER' && (
+                                                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(q.id)}><HiOutlineTrash /></button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

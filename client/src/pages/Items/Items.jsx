@@ -4,7 +4,9 @@ import { HiOutlinePlusCircle, HiOutlinePencil, HiOutlineTrash } from 'react-icon
 import toast from 'react-hot-toast';
 
 const Items = () => {
+    const { user } = useAuth();
     const [data, setData] = useState({ items: [], total: 0 });
+    // ... rest of state ...
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [editing, setEditing] = useState(null);
@@ -42,11 +44,17 @@ const Items = () => {
         <div className="fade-in">
             <div className="page-header">
                 <h1>Items ({data.total})</h1>
-                <button className="btn btn-primary" onClick={openCreate}><HiOutlinePlusCircle size={18} /> Add Item</button>
+                {user?.role !== 'VIEWER' && (
+                    <button className="btn btn-primary" onClick={openCreate}><HiOutlinePlusCircle size={18} /> Add Item</button>
+                )}
             </div>
             <div className="card">
                 {data.items.length === 0 ? (
-                    <div className="empty-state"><h3>No items yet</h3><p>Add products or services to your catalog.</p><button className="btn btn-primary" onClick={openCreate}>Add Item</button></div>
+                    <div className="empty-state">
+                        <h3>No items yet</h3>
+                        <p>Add products or services to your catalog.</p>
+                        {user?.role !== 'VIEWER' && <button className="btn btn-primary" onClick={openCreate}>Add Item</button>}
+                    </div>
                 ) : (
                     <div className="table-container">
                         <table>
@@ -61,8 +69,12 @@ const Items = () => {
                                         <td>{item.taxRate || 0}%</td>
                                         <td>
                                             <div style={{ display: 'flex', gap: 8 }}>
-                                                <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}><HiOutlinePencil /></button>
-                                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}><HiOutlineTrash /></button>
+                                                {user?.role !== 'VIEWER' && (
+                                                    <button className="btn btn-secondary btn-sm" onClick={() => openEdit(item)}><HiOutlinePencil /></button>
+                                                )}
+                                                {user?.role !== 'VIEWER' && (
+                                                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(item.id)}><HiOutlineTrash /></button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

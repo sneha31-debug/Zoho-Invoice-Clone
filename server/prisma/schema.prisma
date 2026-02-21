@@ -108,6 +108,7 @@ model Organization {
   timeEntries       TimeEntry[]
   creditNotes       CreditNote[]
   recurringInvoices RecurringInvoice[]
+  notifications     Notification[]
 
   @@map("organizations")
 }
@@ -130,9 +131,10 @@ model User {
   organizationId String
   organization   Organization @relation(fields: [organizationId], references: [id])
 
-  expenses     Expense[]
-  timeEntries  TimeEntry[]
-  activityLogs ActivityLog[]
+  expenses      Expense[]
+  timeEntries   TimeEntry[]
+  activityLogs  ActivityLog[]
+  notifications Notification[]
 
   @@map("users")
 }
@@ -449,4 +451,23 @@ model ActivityLog {
   user   User?  @relation(fields: [userId], references: [id])
 
   @@map("activity_logs")
+}
+
+// ─── Notification ────────────────────────────────────────
+
+model Notification {
+  id        String   @id @default(uuid())
+  type      String   // "overdue", "payment_received", "reminder", "invoice_created"
+  title     String
+  message   String
+  isRead    Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  userId String
+  user   User @relation(fields: [userId], references: [id])
+
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+
+  @@map("notifications")
 }

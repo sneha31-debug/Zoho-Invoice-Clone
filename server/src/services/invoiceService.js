@@ -117,6 +117,23 @@ const findById = async (organizationId, id) => {
     return invoice;
 };
 
+const findByIdForPDF = async (organizationId, id) => {
+    const invoice = await prisma.invoice.findFirst({
+        where: { id, organizationId },
+        include: {
+            customer: true,
+            items: true,
+            organization: true,
+        },
+    });
+    if (!invoice) {
+        const error = new Error('Invoice not found');
+        error.statusCode = 404;
+        throw error;
+    }
+    return invoice;
+};
+
 const update = async (organizationId, id, data, userId) => {
     const existing = await findById(organizationId, id);
     const { items, ...invoiceData } = data;
@@ -172,4 +189,4 @@ const remove = async (organizationId, id, userId) => {
     return prisma.invoice.delete({ where: { id } });
 };
 
-module.exports = { create, findAll, findById, update, remove };
+module.exports = { create, findAll, findById, findByIdForPDF, update, remove };

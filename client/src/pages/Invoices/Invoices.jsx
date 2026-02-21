@@ -10,7 +10,9 @@ const statusBadge = (status) => {
 };
 
 const Invoices = () => {
+    const { user } = useAuth();
     const [data, setData] = useState({ invoices: [], total: 0 });
+
     const [loading, setLoading] = useState(true);
     const [page, setPage] = useState(1);
 
@@ -39,11 +41,17 @@ const Invoices = () => {
         <div className="fade-in">
             <div className="page-header">
                 <h1>Invoices ({data.total})</h1>
-                <Link to="/invoices/new" className="btn btn-primary"><HiOutlinePlusCircle size={18} /> New Invoice</Link>
+                {user?.role !== 'VIEWER' && (
+                    <Link to="/invoices/new" className="btn btn-primary"><HiOutlinePlusCircle size={18} /> New Invoice</Link>
+                )}
             </div>
             <div className="card">
                 {data.invoices.length === 0 ? (
-                    <div className="empty-state"><h3>No invoices yet</h3><p>Create your first invoice to get started.</p><Link to="/invoices/new" className="btn btn-primary">Create Invoice</Link></div>
+                    <div className="empty-state">
+                        <h3>No invoices yet</h3>
+                        <p>Create your first invoice to get started.</p>
+                        {user?.role !== 'VIEWER' && <Link to="/invoices/new" className="btn btn-primary">Create Invoice</Link>}
+                    </div>
                 ) : (
                     <div className="table-container">
                         <table>
@@ -60,7 +68,9 @@ const Invoices = () => {
                                         <td>
                                             <div style={{ display: 'flex', gap: 8 }}>
                                                 <Link to={`/invoices/${inv.id}`} className="btn btn-secondary btn-sm"><HiOutlineEye /></Link>
-                                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(inv.id)}><HiOutlineTrash /></button>
+                                                {user?.role !== 'VIEWER' && (
+                                                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(inv.id)}><HiOutlineTrash /></button>
+                                                )}
                                             </div>
                                         </td>
                                     </tr>

@@ -63,6 +63,7 @@ export const invoiceAPI = {
     update: (id, data) => api.put(`/invoices/${id}`, data),
     delete: (id) => api.delete(`/invoices/${id}`),
     fromBillable: (data) => api.post('/invoices/from-billable', data),
+    downloadPDF: (id) => api.get(`/invoices/${id}/pdf`, { responseType: 'blob' }),
 };
 
 // Quotes
@@ -121,6 +122,13 @@ export const recurringInvoiceAPI = {
     create: (data) => api.post('/recurring-invoices', data),
     update: (id, data) => api.put(`/recurring-invoices/${id}`, data),
     delete: (id) => api.delete(`/recurring-invoices/${id}`),
+};
+
+// Notifications
+export const notificationAPI = {
+    getAll: () => api.get('/notifications'),
+    markRead: (id) => api.patch(`/notifications/${id}/read`),
+    markAllRead: () => api.patch('/notifications/read-all'),
 };
 
 export default api;

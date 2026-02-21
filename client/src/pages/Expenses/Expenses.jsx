@@ -7,7 +7,9 @@ import toast from 'react-hot-toast';
 const categories = ['TRAVEL', 'MEALS', 'SUPPLIES', 'UTILITIES', 'RENT', 'SOFTWARE', 'MARKETING', 'MILEAGE', 'OTHER'];
 
 const Expenses = () => {
+    const { user } = useAuth();
     const navigate = useNavigate();
+    // ... rest of state ...
     const [data, setData] = useState({ expenses: [], total: 0 });
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -76,14 +78,16 @@ const Expenses = () => {
                     <h1>Expenses ({data.total})</h1>
                     <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>Total: ${totalExpenses.toLocaleString()} · {unbilledCount} unbilled billable</span>
                 </div>
-                <div style={{ display: 'flex', gap: 8 }}>
-                    {selected.length > 0 && (
-                        <button className="btn btn-primary" onClick={handleConvertToInvoice} disabled={converting}>
-                            <HiOutlineDocumentText size={16} /> Convert to Invoice ({selected.length})
-                        </button>
-                    )}
-                    <button className="btn btn-primary" onClick={() => setShowModal(true)}><HiOutlinePlusCircle size={18} /> Add Expense</button>
-                </div>
+                {user?.role !== 'VIEWER' && (
+                    <div style={{ display: 'flex', gap: 8 }}>
+                        {selected.length > 0 && (
+                            <button className="btn btn-primary" onClick={handleConvertToInvoice} disabled={converting}>
+                                <HiOutlineDocumentText size={16} /> Convert to Invoice ({selected.length})
+                            </button>
+                        )}
+                        <button className="btn btn-primary" onClick={() => setShowModal(true)}><HiOutlinePlusCircle size={18} /> Add Expense</button>
+                    </div>
+                )}
             </div>
             <div className="card">
                 {data.expenses.length === 0 ? (
@@ -96,7 +100,7 @@ const Expenses = () => {
                                 {data.expenses.map((e) => (
                                     <tr key={e.id} style={{ opacity: e.isBilled ? 0.5 : 1 }}>
                                         <td>
-                                            {e.isBillable && !e.isBilled && (
+                                            {user?.role !== 'VIEWER' && e.isBillable && !e.isBilled && (
                                                 <input type="checkbox" checked={selected.includes(e.id)} onChange={() => toggleSelect(e.id)} style={{ width: 'auto', cursor: 'pointer' }} />
                                             )}
                                         </td>
@@ -111,7 +115,11 @@ const Expenses = () => {
                                                     : <span className="badge badge-secondary">Non-billable</span>}
                                         </td>
                                         <td>{e.user?.firstName} {e.user?.lastName}</td>
-                                        <td><button className="btn btn-danger btn-sm" onClick={() => handleDelete(e.id)}><HiOutlineTrash /></button></td>
+                                        <td>
+                                            {user?.role !== 'VIEWER' && (
+                                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(e.id)}><HiOutlineTrash /></button>
+                                            )}
+                                        </td>
                                     </tr>
                                 ))}
                             </tbody>
