@@ -39,7 +39,20 @@ const CreateInvoice = () => {
         e.preventDefault();
         setLoading(true);
         try {
-            await invoiceAPI.create({ ...form, discountAmount: Number(form.discountAmount) });
+            const payload = {
+                customerId: form.customerId,
+                dueDate: new Date(form.dueDate).toISOString(),
+                notes: form.notes || undefined,
+                discountAmount: Number(form.discountAmount) || 0,
+                items: form.items.map((item) => ({
+                    description: item.description || '',
+                    quantity: Number(item.quantity),
+                    rate: Number(item.rate),
+                    taxRate: Number(item.taxRate) || 0,
+                    itemId: item.itemId && item.itemId !== '' ? item.itemId : undefined,
+                })),
+            };
+            await invoiceAPI.create(payload);
             toast.success('Invoice created!');
             navigate('/invoices');
         } catch (err) { toast.error(err.response?.data?.message || 'Failed to create invoice'); }

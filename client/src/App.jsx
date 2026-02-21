@@ -14,6 +14,8 @@ import Quotes from './pages/Quotes/Quotes';
 import Payments from './pages/Payments/Payments';
 import Expenses from './pages/Expenses/Expenses';
 import TimeTracking from './pages/TimeTracking/TimeTracking';
+import Reports from './pages/Reports/Reports';
+import Settings from './pages/Settings/Settings';
 
 function App() {
   return (
@@ -36,6 +38,8 @@ function App() {
             <Route path="/payments" element={<Payments />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/time-tracking" element={<TimeTracking />} />
+            <Route path="/reports" element={<Reports />} />
+            <Route path="/settings" element={<Settings />} />
           </Route>
         </Routes>
       </BrowserRouter>

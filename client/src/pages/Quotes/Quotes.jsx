@@ -29,7 +29,17 @@ const Quotes = () => {
     const handleCreate = async (e) => {
         e.preventDefault();
         try {
-            await quoteAPI.create(form);
+            const payload = {
+                customerId: form.customerId,
+                expiryDate: form.expiryDate ? new Date(form.expiryDate).toISOString() : undefined,
+                items: form.items.map((item) => ({
+                    description: item.description || '',
+                    quantity: Number(item.quantity),
+                    rate: Number(item.rate),
+                    taxRate: Number(item.taxRate) || 0,
+                })),
+            };
+            await quoteAPI.create(payload);
             toast.success('Quote created');
             setShowModal(false); fetchQuotes();
         } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }

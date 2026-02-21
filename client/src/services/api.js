@@ -30,6 +30,8 @@ export const authAPI = {
     register: (data) => api.post('/auth/register', data),
     login: (data) => api.post('/auth/login', data),
     getMe: () => api.get('/auth/me'),
+    updateProfile: (data) => api.patch('/auth/profile', data),
+    updateOrg: (data) => api.patch('/auth/organization', data),
 };
 
 // Customers
@@ -90,6 +92,14 @@ export const timeAPI = {
     create: (data) => api.post('/time-tracking', data),
     update: (id, data) => api.put(`/time-tracking/${id}`, data),
     delete: (id) => api.delete(`/time-tracking/${id}`),
+};
+
+// Reports
+export const reportAPI = {
+    sales: () => api.get('/reports/sales'),
+    expenses: () => api.get('/reports/expenses'),
+    aging: () => api.get('/reports/aging'),
+    tax: () => api.get('/reports/tax'),
 };
 
 export default api;

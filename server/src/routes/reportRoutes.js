@@ -1,20 +1,13 @@
 const express = require('express');
 const router = express.Router();
+const reportController = require('../controllers/reportController');
+const authMiddleware = require('../middlewares/authMiddleware');
 
-router.get('/sales', (req, res) => {
-    res.json({ success: true, message: 'Sales report — coming soon' });
-});
+router.use(authMiddleware);
 
-router.get('/expenses', (req, res) => {
-    res.json({ success: true, message: 'Expense report — coming soon' });
-});
-
-router.get('/aging', (req, res) => {
-    res.json({ success: true, message: 'Aging report — coming soon' });
-});
-
-router.get('/tax', (req, res) => {
-    res.json({ success: true, message: 'Tax report — coming soon' });
-});
+router.get('/sales', reportController.salesSummary);
+router.get('/expenses', reportController.expenseSummary);
+router.get('/aging', reportController.agingReport);
+router.get('/tax', reportController.taxSummary);
 
 module.exports = router;
