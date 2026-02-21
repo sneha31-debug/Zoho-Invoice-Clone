@@ -1,0 +1,65 @@
+import { NavLink, useNavigate } from 'react-router-dom';
+import { useAuth } from '../../context/AuthContext';
+import {
+    HiOutlineHome, HiOutlineDocumentText, HiOutlineUsers,
+    HiOutlineCube, HiOutlineClipboardList, HiOutlineCreditCard,
+    HiOutlineCash, HiOutlineClock, HiOutlineLogout,
+} from 'react-icons/hi';
+import './Sidebar.css';
+
+const navItems = [
+    { path: '/', icon: HiOutlineHome, label: 'Dashboard' },
+    { path: '/invoices', icon: HiOutlineDocumentText, label: 'Invoices' },
+    { path: '/customers', icon: HiOutlineUsers, label: 'Customers' },
+    { path: '/items', icon: HiOutlineCube, label: 'Items' },
+    { path: '/quotes', icon: HiOutlineClipboardList, label: 'Quotes' },
+    { path: '/payments', icon: HiOutlineCreditCard, label: 'Payments' },
+    { path: '/expenses', icon: HiOutlineCash, label: 'Expenses' },
+    { path: '/time-tracking', icon: HiOutlineClock, label: 'Time Tracking' },
+];
+
+const Sidebar = () => {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
+
+    return (
+        <aside className="sidebar">
+            <div className="sidebar-brand">
+                <div className="brand-icon">Z</div>
+                <div className="brand-text">
+                    <span className="brand-name">Zoho Invoice</span>
+                    <span className="brand-org">{user?.organization?.name || 'My Organization'}</span>
+                </div>
+            </div>
+
+            <nav className="sidebar-nav">
+                {navItems.map(({ path, icon: Icon, label }) => (
+                    <NavLink key={path} to={path} end={path === '/'} className={({ isActive }) => `nav-item ${isActive ? 'active' : ''}`}>
+                        <Icon size={20} />
+                        <span>{label}</span>
+                    </NavLink>
+                ))}
+            </nav>
+
+            <div className="sidebar-footer">
+                <div className="user-info">
+                    <div className="user-avatar">{user?.firstName?.[0] || 'U'}{user?.lastName?.[0] || ''}</div>
+                    <div className="user-details">
+                        <span className="user-name">{user?.firstName} {user?.lastName}</span>
+                        <span className="user-role">{user?.role}</span>
+                    </div>
+                </div>
+                <button className="logout-btn" onClick={handleLogout} title="Logout">
+                    <HiOutlineLogout size={20} />
+                </button>
+            </div>
+        </aside>
+    );
+};
+
+export default Sidebar;
