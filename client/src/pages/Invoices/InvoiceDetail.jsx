@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { invoiceAPI } from '../../services/api';
-import { HiOutlineArrowLeft } from 'react-icons/hi';
+import { HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlinePaperAirplane, HiOutlineTrash } from 'react-icons/hi';
+import toast from 'react-hot-toast';
 
 const statusBadge = (status) => {
     const map = { PAID: 'badge-success', SENT: 'badge-info', DRAFT: 'badge-secondary', OVERDUE: 'badge-danger', PARTIALLY_PAID: 'badge-warning' };
@@ -10,12 +11,47 @@ const statusBadge = (status) => {
 
 const InvoiceDetail = () => {
     const { id } = useParams();
+    const navigate = useNavigate();
     const [invoice, setInvoice] = useState(null);
     const [loading, setLoading] = useState(true);
+    const [acting, setActing] = useState(false);
 
-    useEffect(() => {
+    const fetchInvoice = () => {
         invoiceAPI.getById(id).then((res) => setInvoice(res.data.data)).catch(console.error).finally(() => setLoading(false));
-    }, [id]);
+    };
+
+    useEffect(() => { fetchInvoice(); }, [id]);
+
+    const handleMarkPaid = async () => {
+        setActing(true);
+        try {
+            await invoiceAPI.update(id, { status: 'PAID', amountPaid: invoice.totalAmount, balanceDue: 0 });
+            toast.success('Invoice marked as paid');
+            fetchInvoice();
+        } catch (err) { toast.error('Failed to update'); }
+        setActing(false);
+    };
+
+    const handleMarkSent = async () => {
+        setActing(true);
+        try {
+            await invoiceAPI.update(id, { status: 'SENT' });
+            toast.success('Invoice marked as sent');
+            fetchInvoice();
+        } catch (err) { toast.error('Failed to update'); }
+        setActing(false);
+    };
+
+    const handleDelete = async () => {
+        if (!window.confirm('Are you sure you want to delete this invoice? This cannot be undone.')) return;
+        setActing(true);
+        try {
+            await invoiceAPI.delete(id);
+            toast.success('Invoice deleted');
+            navigate('/invoices');
+        } catch (err) { toast.error('Failed to delete'); }
+        setActing(false);
+    };
 
     if (loading) return <div className="loading-spinner" />;
     if (!invoice) return <div className="empty-state"><h3>Invoice not found</h3></div>;
@@ -30,7 +66,22 @@ const InvoiceDetail = () => {
                         <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>Created {new Date(invoice.createdAt).toLocaleDateString()}</span>
                     </div>
                 </div>
-                {statusBadge(invoice.status)}
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {statusBadge(invoice.status)}
+                    {invoice.status !== 'PAID' && (
+                        <button className="btn btn-primary btn-sm" onClick={handleMarkPaid} disabled={acting}>
+                            <HiOutlineCheckCircle /> Mark Paid
+                        </button>
+                    )}
+                    {invoice.status === 'DRAFT' && (
+                        <button className="btn btn-secondary btn-sm" onClick={handleMarkSent} disabled={acting}>
+                            <HiOutlinePaperAirplane /> Mark Sent
+                        </button>
+                    )}
+                    <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={acting}>
+                        <HiOutlineTrash /> Delete
+                    </button>
+                </div>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
@@ -79,6 +130,14 @@ const InvoiceDetail = () => {
                     </div>
                 </div>
             </div>
+
+            {/* Notes */}
+            {invoice.notes && (
+                <div className="card" style={{ marginTop: 20 }}>
+                    <h4 style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>Notes</h4>
+                    <p style={{ fontSize: 14, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{invoice.notes}</p>
+                </div>
+            )}
         </div>
     );
 };

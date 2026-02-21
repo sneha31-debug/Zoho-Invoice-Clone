@@ -4,7 +4,7 @@ import {
     HiOutlineHome, HiOutlineDocumentText, HiOutlineUsers,
     HiOutlineCube, HiOutlineClipboardList, HiOutlineCreditCard,
     HiOutlineCash, HiOutlineClock, HiOutlineLogout,
-    HiOutlineChartBar, HiOutlineCog,
+    HiOutlineChartBar, HiOutlineCog, HiOutlineReceiptRefund, HiOutlineRefresh,
 } from 'react-icons/hi';
 import './Sidebar.css';
 
@@ -18,6 +18,8 @@ const navItems = [
     { path: '/expenses', icon: HiOutlineCash, label: 'Expenses' },
     { path: '/time-tracking', icon: HiOutlineClock, label: 'Time Tracking' },
     { path: '/reports', icon: HiOutlineChartBar, label: 'Reports' },
+    { path: '/credit-notes', icon: HiOutlineReceiptRefund, label: 'Credit Notes' },
+    { path: '/recurring-invoices', icon: HiOutlineRefresh, label: 'Recurring' },
     { path: '/settings', icon: HiOutlineCog, label: 'Settings' },
 ];
 

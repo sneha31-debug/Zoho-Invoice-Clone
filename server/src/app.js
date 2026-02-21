@@ -14,6 +14,8 @@ const paymentRoutes = require('./routes/paymentRoutes');
 const expenseRoutes = require('./routes/expenseRoutes');
 const timeTrackingRoutes = require('./routes/timeTrackingRoutes');
 const reportRoutes = require('./routes/reportRoutes');
+const creditNoteRoutes = require('./routes/creditNoteRoutes');
+const recurringInvoiceRoutes = require('./routes/recurringInvoiceRoutes');
 
 const app = express();
 
@@ -38,6 +40,8 @@ app.use('/api/v1/payments', paymentRoutes);
 app.use('/api/v1/expenses', expenseRoutes);
 app.use('/api/v1/time-tracking', timeTrackingRoutes);
 app.use('/api/v1/reports', reportRoutes);
+app.use('/api/v1/credit-notes', creditNoteRoutes);
+app.use('/api/v1/recurring-invoices', recurringInvoiceRoutes);
 
 // ─── Error Handler (must be last) ────────────────────────
 app.use(errorHandler);

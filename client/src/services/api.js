@@ -102,4 +102,21 @@ export const reportAPI = {
     tax: () => api.get('/reports/tax'),
 };
 
+// Credit Notes
+export const creditNoteAPI = {
+    getAll: (params) => api.get('/credit-notes', { params }),
+    getById: (id) => api.get(`/credit-notes/${id}`),
+    create: (data) => api.post('/credit-notes', data),
+    delete: (id) => api.delete(`/credit-notes/${id}`),
+};
+
+// Recurring Invoices
+export const recurringInvoiceAPI = {
+    getAll: (params) => api.get('/recurring-invoices', { params }),
+    getById: (id) => api.get(`/recurring-invoices/${id}`),
+    create: (data) => api.post('/recurring-invoices', data),
+    update: (id, data) => api.put(`/recurring-invoices/${id}`, data),
+    delete: (id) => api.delete(`/recurring-invoices/${id}`),
+};
+
 export default api;

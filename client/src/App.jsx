@@ -16,6 +16,9 @@ import Expenses from './pages/Expenses/Expenses';
 import TimeTracking from './pages/TimeTracking/TimeTracking';
 import Reports from './pages/Reports/Reports';
 import Settings from './pages/Settings/Settings';
+import CustomerDetail from './pages/Customers/CustomerDetail';
+import CreditNotes from './pages/CreditNotes/CreditNotes';
+import RecurringInvoices from './pages/RecurringInvoices/RecurringInvoices';
 
 function App() {
   return (
@@ -33,6 +36,7 @@ function App() {
             <Route path="/invoices/new" element={<CreateInvoice />} />
             <Route path="/invoices/:id" element={<InvoiceDetail />} />
             <Route path="/customers" element={<Customers />} />
+            <Route path="/customers/:id" element={<CustomerDetail />} />
             <Route path="/items" element={<Items />} />
             <Route path="/quotes" element={<Quotes />} />
             <Route path="/payments" element={<Payments />} />
@@ -40,6 +44,8 @@ function App() {
             <Route path="/time-tracking" element={<TimeTracking />} />
             <Route path="/reports" element={<Reports />} />
             <Route path="/settings" element={<Settings />} />
+            <Route path="/credit-notes" element={<CreditNotes />} />
+            <Route path="/recurring-invoices" element={<RecurringInvoices />} />
           </Route>
         </Routes>
       </BrowserRouter>
