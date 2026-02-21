@@ -3,13 +3,13 @@ import { expenseAPI } from '../../services/api';
 import { HiOutlinePlusCircle, HiOutlineTrash } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
-const categories = ['TRAVEL', 'MEALS', 'SOFTWARE', 'OFFICE_SUPPLIES', 'MARKETING', 'RENT', 'UTILITIES', 'INSURANCE', 'SALARY', 'MISCELLANEOUS'];
+const categories = ['TRAVEL', 'MEALS', 'SUPPLIES', 'UTILITIES', 'RENT', 'SOFTWARE', 'MARKETING', 'MILEAGE', 'OTHER'];
 
 const Expenses = () => {
     const [data, setData] = useState({ expenses: [], total: 0 });
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [form, setForm] = useState({ amount: '', category: 'MISCELLANEOUS', merchant: '', description: '', isBillable: false });
+    const [form, setForm] = useState({ amount: '', category: 'OTHER', merchant: '', description: '', isBillable: false });
 
     const fetchExpenses = async () => {
         try { const res = await expenseAPI.getAll({ limit: 50 }); setData(res.data.data); }

@@ -8,10 +8,20 @@ const generatePaymentNumber = async (organizationId) => {
 const create = async (organizationId, data) => {
     const paymentNumber = await generatePaymentNumber(organizationId);
 
+    // Sanitize: empty invoiceId → null, ensure amount is a number
+    const cleanData = {
+        ...data,
+        paymentNumber,
+        organizationId,
+        amount: Number(data.amount),
+        invoiceId: data.invoiceId && data.invoiceId !== '' ? data.invoiceId : null,
+    };
+    if (data.paymentDate) cleanData.paymentDate = new Date(data.paymentDate);
+
     // Create payment and update invoice balance if linked
     const payment = await prisma.$transaction(async (tx) => {
         const newPayment = await tx.payment.create({
-            data: { ...data, paymentNumber, organizationId },
+            data: cleanData,
             include: { customer: true, invoice: true },
         });
 

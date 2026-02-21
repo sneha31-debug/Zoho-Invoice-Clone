@@ -1,8 +1,17 @@
 const prisma = require('../models/prismaClient');
 
 const create = async (organizationId, userId, data) => {
+    const cleanData = {
+        ...data,
+        organizationId,
+        userId,
+        hours: Number(data.hours),
+        hourlyRate: Number(data.hourlyRate) || 0,
+    };
+    if (!cleanData.customerId || cleanData.customerId === '') delete cleanData.customerId;
+    if (data.date) cleanData.date = new Date(data.date);
     return prisma.timeEntry.create({
-        data: { ...data, organizationId, userId },
+        data: cleanData,
         include: { user: { select: { firstName: true, lastName: true } }, customer: true },
     });
 };

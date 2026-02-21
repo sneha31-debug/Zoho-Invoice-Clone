@@ -19,9 +19,15 @@ const calculateTotals = (items) => {
 };
 
 const create = async (organizationId, data) => {
-    const { items, discountAmount = 0, ...quoteData } = data;
+    const { items, discountAmount = 0, customerId, expiryDate, notes, terms, currency } = data;
     if (!items || items.length === 0) {
         const error = new Error('At least one line item is required');
+        error.statusCode = 400;
+        throw error;
+    }
+
+    if (!customerId) {
+        const error = new Error('Customer is required');
         error.statusCode = 400;
         throw error;
     }
@@ -29,23 +35,32 @@ const create = async (organizationId, data) => {
     const quoteNumber = await generateQuoteNumber(organizationId);
     const { processedItems, subtotal, taxAmount, totalAmount } = calculateTotals(items);
 
+    // Build only valid Prisma fields
+    const quoteData = {
+        quoteNumber,
+        organizationId,
+        customerId,
+        expiryDate: new Date(expiryDate || Date.now() + 30 * 24 * 60 * 60 * 1000),
+        subtotal,
+        taxAmount,
+        discountAmount: Number(discountAmount),
+        totalAmount: totalAmount - discountAmount,
+    };
+    if (notes) quoteData.notes = notes;
+    if (terms) quoteData.terms = terms;
+    if (currency) quoteData.currency = currency;
+
     return prisma.quote.create({
         data: {
             ...quoteData,
-            quoteNumber,
-            organizationId,
-            subtotal,
-            taxAmount,
-            discountAmount,
-            totalAmount: totalAmount - discountAmount,
             items: {
                 create: processedItems.map((item) => ({
-                    description: item.description,
-                    quantity: item.quantity,
-                    rate: item.rate,
-                    taxRate: item.taxRate || 0,
-                    amount: item.amount,
-                    itemId: item.itemId || null,
+                    description: item.description || '',
+                    quantity: Number(item.quantity),
+                    rate: Number(item.rate),
+                    taxRate: Number(item.taxRate) || 0,
+                    amount: Number(item.amount),
+                    itemId: item.itemId && item.itemId !== '' ? item.itemId : null,
                 })),
             },
         },
