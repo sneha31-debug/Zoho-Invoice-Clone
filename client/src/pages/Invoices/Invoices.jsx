@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { invoiceAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { HiOutlinePlusCircle, HiOutlineEye, HiOutlineTrash } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 

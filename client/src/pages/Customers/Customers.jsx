@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { customerAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { HiOutlinePlusCircle, HiOutlinePencil, HiOutlineTrash } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 

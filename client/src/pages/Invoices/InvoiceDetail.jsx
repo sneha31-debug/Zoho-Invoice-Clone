@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { invoiceAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlinePaperAirplane, HiOutlineTrash, HiOutlinePencil, HiOutlineClock, HiOutlinePrinter } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
@@ -17,6 +18,7 @@ const actionIcon = (action) => {
 const InvoiceDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
+    const { user } = useAuth();
     const [invoice, setInvoice] = useState(null);
     const [loading, setLoading] = useState(true);
     const [acting, setActing] = useState(false);

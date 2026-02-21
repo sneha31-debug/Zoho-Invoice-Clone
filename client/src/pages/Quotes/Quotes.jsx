@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { quoteAPI, customerAPI } from '../../services/api';
+import { useAuth } from '../../context/AuthContext';
 import { HiOutlinePlusCircle, HiOutlineTrash, HiOutlineSwitchHorizontal } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
@@ -11,7 +12,7 @@ const statusBadge = (status) => {
 const Quotes = () => {
     const { user } = useAuth();
     const [data, setData] = useState({ quotes: [], total: 0 });
- 
+
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
