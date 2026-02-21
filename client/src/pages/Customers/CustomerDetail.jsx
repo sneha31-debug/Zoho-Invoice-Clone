@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { customerAPI, invoiceAPI, paymentAPI, quoteAPI } from '../../services/api';
-import { HiOutlineArrowLeft, HiOutlineDocumentText, HiOutlineCreditCard, HiOutlineClipboardList } from 'react-icons/hi';
+import { HiOutlineArrowLeft, HiOutlineDocumentText, HiOutlineCreditCard, HiOutlineClipboardList, HiOutlineDocumentReport } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
 const statusBadge = (status) => {
@@ -60,6 +60,9 @@ const CustomerDetail = () => {
                         {customer.companyName && <span style={{ fontSize: 14, color: 'var(--text-muted)' }}>{customer.companyName}</span>}
                     </div>
                 </div>
+                <Link to={`/customers/${id}/statement`} className="btn btn-secondary btn-sm">
+                    <HiOutlineDocumentReport /> Statement
+                </Link>
             </div>
 
             {/* Info + Stats */}

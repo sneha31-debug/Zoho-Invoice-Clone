@@ -1,31 +1,31 @@
 const prisma = require('../models/prismaClient');
 
-const salesSummary = async (organizationId) => {
-    const invoices = await prisma.invoice.findMany({ where: { organizationId } });
+const parseDateRange = (startDate, endDate) => {
+    const filter = {};
+    if (startDate) filter.gte = new Date(startDate);
+    if (endDate) { const end = new Date(endDate); end.setHours(23, 59, 59, 999); filter.lte = end; }
+    return Object.keys(filter).length ? filter : undefined;
+};
+
+const salesSummary = async (organizationId, { startDate, endDate } = {}) => {
+    const where = { organizationId };
+    const dateFilter = parseDateRange(startDate, endDate);
+    if (dateFilter) where.createdAt = dateFilter;
+
+    const invoices = await prisma.invoice.findMany({ where });
 
     const totalRevenue = invoices.reduce((s, i) => s + i.totalAmount, 0);
     const totalPaid = invoices.reduce((s, i) => s + i.amountPaid, 0);
     const totalOutstanding = invoices.reduce((s, i) => s + i.balanceDue, 0);
-    const invoiceCount = invoices.length;
 
     const byStatus = {};
-    invoices.forEach((i) => {
-        byStatus[i.status] = (byStatus[i.status] || 0) + 1;
-    });
+    invoices.forEach((i) => { byStatus[i.status] = (byStatus[i.status] || 0) + 1; });
 
-    // Monthly revenue (last 6 months)
     const monthly = [];
     for (let m = 5; m >= 0; m--) {
-        const start = new Date();
-        start.setMonth(start.getMonth() - m, 1);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + 1);
-
-        const monthInvoices = invoices.filter((i) => {
-            const d = new Date(i.createdAt);
-            return d >= start && d < end;
-        });
+        const start = new Date(); start.setMonth(start.getMonth() - m, 1); start.setHours(0, 0, 0, 0);
+        const end = new Date(start); end.setMonth(end.getMonth() + 1);
+        const monthInvoices = invoices.filter((i) => { const d = new Date(i.createdAt); return d >= start && d < end; });
         monthly.push({
             month: start.toLocaleString('default', { month: 'short', year: 'numeric' }),
             revenue: monthInvoices.reduce((s, i) => s + i.totalAmount, 0),
@@ -34,31 +34,25 @@ const salesSummary = async (organizationId) => {
         });
     }
 
-    return { totalRevenue, totalPaid, totalOutstanding, invoiceCount, byStatus, monthly };
+    return { totalRevenue, totalPaid, totalOutstanding, invoiceCount: invoices.length, byStatus, monthly };
 };
 
-const expenseSummary = async (organizationId) => {
-    const expenses = await prisma.expense.findMany({ where: { organizationId } });
+const expenseSummary = async (organizationId, { startDate, endDate } = {}) => {
+    const where = { organizationId };
+    const dateFilter = parseDateRange(startDate, endDate);
+    if (dateFilter) where.date = dateFilter;
+
+    const expenses = await prisma.expense.findMany({ where });
 
     const totalExpenses = expenses.reduce((s, e) => s + e.amount, 0);
     const byCategory = {};
-    expenses.forEach((e) => {
-        byCategory[e.category] = (byCategory[e.category] || 0) + e.amount;
-    });
+    expenses.forEach((e) => { byCategory[e.category] = (byCategory[e.category] || 0) + e.amount; });
 
-    // Monthly expenses (last 6 months)
     const monthly = [];
     for (let m = 5; m >= 0; m--) {
-        const start = new Date();
-        start.setMonth(start.getMonth() - m, 1);
-        start.setHours(0, 0, 0, 0);
-        const end = new Date(start);
-        end.setMonth(end.getMonth() + 1);
-
-        const monthExpenses = expenses.filter((e) => {
-            const d = new Date(e.date || e.createdAt);
-            return d >= start && d < end;
-        });
+        const start = new Date(); start.setMonth(start.getMonth() - m, 1); start.setHours(0, 0, 0, 0);
+        const end = new Date(start); end.setMonth(end.getMonth() + 1);
+        const monthExpenses = expenses.filter((e) => { const d = new Date(e.date || e.createdAt); return d >= start && d < end; });
         monthly.push({
             month: start.toLocaleString('default', { month: 'short', year: 'numeric' }),
             total: monthExpenses.reduce((s, e) => s + e.amount, 0),
@@ -99,11 +93,12 @@ const agingReport = async (organizationId) => {
     return { buckets, totals, totalOutstanding: Object.values(totals).reduce((s, v) => s + v, 0) };
 };
 
-const taxSummary = async (organizationId) => {
-    const invoices = await prisma.invoice.findMany({
-        where: { organizationId },
-        include: { items: true },
-    });
+const taxSummary = async (organizationId, { startDate, endDate } = {}) => {
+    const where = { organizationId };
+    const dateFilter = parseDateRange(startDate, endDate);
+    if (dateFilter) where.createdAt = dateFilter;
+
+    const invoices = await prisma.invoice.findMany({ where, include: { items: true } });
 
     let totalTaxCollected = 0;
     const byRate = {};

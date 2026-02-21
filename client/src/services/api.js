@@ -32,6 +32,9 @@ export const authAPI = {
     getMe: () => api.get('/auth/me'),
     updateProfile: (data) => api.patch('/auth/profile', data),
     updateOrg: (data) => api.patch('/auth/organization', data),
+    getUsers: () => api.get('/auth/users'),
+    inviteUser: (data) => api.post('/auth/invite', data),
+    updateUser: (id, data) => api.patch(`/auth/users/${id}`, data),
 };
 
 // Customers
@@ -96,10 +99,10 @@ export const timeAPI = {
 
 // Reports
 export const reportAPI = {
-    sales: () => api.get('/reports/sales'),
-    expenses: () => api.get('/reports/expenses'),
+    sales: (params) => api.get('/reports/sales', { params }),
+    expenses: (params) => api.get('/reports/expenses', { params }),
     aging: () => api.get('/reports/aging'),
-    tax: () => api.get('/reports/tax'),
+    tax: (params) => api.get('/reports/tax', { params }),
 };
 
 // Credit Notes

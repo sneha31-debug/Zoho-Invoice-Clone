@@ -8,7 +8,6 @@ const generateInvoiceNumber = async (organizationId) => {
 const calculateTotals = (items) => {
     let subtotal = 0;
     let taxAmount = 0;
-
     const processedItems = items.map((item) => {
         const amount = item.quantity * item.rate;
         const tax = amount * (item.taxRate || 0) / 100;
@@ -16,11 +15,16 @@ const calculateTotals = (items) => {
         taxAmount += tax;
         return { ...item, amount };
     });
-
     return { processedItems, subtotal, taxAmount, totalAmount: subtotal + taxAmount };
 };
 
-const create = async (organizationId, data) => {
+const logActivity = async (invoiceId, action, details, userId) => {
+    return prisma.activityLog.create({
+        data: { invoiceId, action, details: details || null, userId: userId || null },
+    });
+};
+
+const create = async (organizationId, data, userId) => {
     const { items, discountAmount = 0, customerId, dueDate, notes, terms, currency } = data;
 
     if (!items || items.length === 0) {
@@ -39,23 +43,17 @@ const create = async (organizationId, data) => {
     const { processedItems, subtotal, taxAmount, totalAmount } = calculateTotals(items);
     const finalTotal = totalAmount - discountAmount;
 
-    // Build only valid Prisma fields
     const invoiceData = {
-        invoiceNumber,
-        organizationId,
-        customerId,
-        dueDate: new Date(dueDate),
-        subtotal,
-        taxAmount,
+        invoiceNumber, organizationId, customerId,
+        dueDate: new Date(dueDate), subtotal, taxAmount,
         discountAmount: Number(discountAmount),
-        totalAmount: finalTotal,
-        balanceDue: finalTotal,
+        totalAmount: finalTotal, balanceDue: finalTotal,
     };
     if (notes) invoiceData.notes = notes;
     if (terms) invoiceData.terms = terms;
     if (currency) invoiceData.currency = currency;
 
-    return prisma.invoice.create({
+    const invoice = await prisma.invoice.create({
         data: {
             ...invoiceData,
             items: {
@@ -71,6 +69,9 @@ const create = async (organizationId, data) => {
         },
         include: { items: true, customer: true },
     });
+
+    await logActivity(invoice.id, 'created', `Invoice ${invoiceNumber} created for $${finalTotal.toLocaleString()}`, userId);
+    return invoice;
 };
 
 const findAll = async (organizationId, { page = 1, limit = 20, status, customerId, search }) => {
@@ -88,9 +89,7 @@ const findAll = async (organizationId, { page = 1, limit = 20, status, customerI
 
     const [invoices, total] = await Promise.all([
         prisma.invoice.findMany({
-            where,
-            skip,
-            take: Number(limit),
+            where, skip, take: Number(limit),
             include: { customer: true, items: true },
             orderBy: { createdAt: 'desc' },
         }),
@@ -103,7 +102,12 @@ const findAll = async (organizationId, { page = 1, limit = 20, status, customerI
 const findById = async (organizationId, id) => {
     const invoice = await prisma.invoice.findFirst({
         where: { id, organizationId },
-        include: { customer: true, items: { include: { item: true } }, payments: true, activityLogs: true },
+        include: {
+            customer: true,
+            items: { include: { item: true } },
+            payments: true,
+            activityLogs: { orderBy: { createdAt: 'desc' }, include: { user: { select: { firstName: true, lastName: true } } } },
+        },
     });
     if (!invoice) {
         const error = new Error('Invoice not found');
@@ -113,52 +117,58 @@ const findById = async (organizationId, id) => {
     return invoice;
 };
 
-const update = async (organizationId, id, data) => {
-    await findById(organizationId, id);
+const update = async (organizationId, id, data, userId) => {
+    const existing = await findById(organizationId, id);
     const { items, ...invoiceData } = data;
 
-    // If items are provided, recalculate totals and replace line items
+    let result;
     if (items && items.length > 0) {
         const { processedItems, subtotal, taxAmount, totalAmount } = calculateTotals(items);
         const discountAmount = data.discountAmount || 0;
         const finalTotal = totalAmount - discountAmount;
 
-        // Delete existing items and create new ones
         await prisma.invoiceItem.deleteMany({ where: { invoiceId: id } });
-
-        return prisma.invoice.update({
+        result = await prisma.invoice.update({
             where: { id },
             data: {
-                ...invoiceData,
-                subtotal,
-                taxAmount,
-                discountAmount,
+                ...invoiceData, subtotal, taxAmount, discountAmount,
                 totalAmount: finalTotal,
                 balanceDue: finalTotal - (invoiceData.amountPaid || 0),
                 items: {
                     create: processedItems.map((item) => ({
-                        description: item.description,
-                        quantity: item.quantity,
-                        rate: item.rate,
-                        taxRate: item.taxRate || 0,
-                        amount: item.amount,
-                        itemId: item.itemId || null,
+                        description: item.description, quantity: item.quantity,
+                        rate: item.rate, taxRate: item.taxRate || 0,
+                        amount: item.amount, itemId: item.itemId || null,
                     })),
                 },
             },
             include: { items: true, customer: true },
         });
+    } else {
+        result = await prisma.invoice.update({
+            where: { id }, data: invoiceData,
+            include: { items: true, customer: true },
+        });
     }
 
-    return prisma.invoice.update({
-        where: { id },
-        data: invoiceData,
-        include: { items: true, customer: true },
-    });
+    // Auto-log status changes
+    if (data.status && data.status !== existing.status) {
+        const actionMap = { SENT: 'sent', PAID: 'paid', OVERDUE: 'overdue', VOID: 'voided', VIEWED: 'viewed' };
+        const action = actionMap[data.status] || 'updated';
+        const detail = data.status === 'PAID'
+            ? `Invoice marked as paid — $${(existing.totalAmount || 0).toLocaleString()}`
+            : `Invoice status changed to ${data.status}`;
+        await logActivity(id, action, detail, userId);
+    } else {
+        await logActivity(id, 'updated', 'Invoice details updated', userId);
+    }
+
+    return result;
 };
 
-const remove = async (organizationId, id) => {
-    await findById(organizationId, id);
+const remove = async (organizationId, id, userId) => {
+    const inv = await findById(organizationId, id);
+    await logActivity(id, 'deleted', `Invoice ${inv.invoiceNumber} deleted`, userId);
     return prisma.invoice.delete({ where: { id } });
 };
 

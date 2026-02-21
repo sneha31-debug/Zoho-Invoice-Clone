@@ -5,6 +5,7 @@ import {
     HiOutlineCube, HiOutlineClipboardList, HiOutlineCreditCard,
     HiOutlineCash, HiOutlineClock, HiOutlineLogout,
     HiOutlineChartBar, HiOutlineCog, HiOutlineReceiptRefund, HiOutlineRefresh,
+    HiOutlineUserGroup,
 } from 'react-icons/hi';
 import './Sidebar.css';
 
@@ -20,6 +21,7 @@ const navItems = [
     { path: '/reports', icon: HiOutlineChartBar, label: 'Reports' },
     { path: '/credit-notes', icon: HiOutlineReceiptRefund, label: 'Credit Notes' },
     { path: '/recurring-invoices', icon: HiOutlineRefresh, label: 'Recurring' },
+    { path: '/users', icon: HiOutlineUserGroup, label: 'Users' },
     { path: '/settings', icon: HiOutlineCog, label: 'Settings' },
 ];
 

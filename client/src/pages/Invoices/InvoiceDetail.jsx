@@ -1,12 +1,17 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { invoiceAPI } from '../../services/api';
-import { HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlinePaperAirplane, HiOutlineTrash } from 'react-icons/hi';
+import { HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlinePaperAirplane, HiOutlineTrash, HiOutlinePencil, HiOutlineClock } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
 const statusBadge = (status) => {
     const map = { PAID: 'badge-success', SENT: 'badge-info', DRAFT: 'badge-secondary', OVERDUE: 'badge-danger', PARTIALLY_PAID: 'badge-warning' };
     return <span className={`badge ${map[status] || 'badge-secondary'}`}>{status.replace('_', ' ')}</span>;
+};
+
+const actionIcon = (action) => {
+    const map = { created: '🆕', sent: '📤', paid: '✅', updated: '✏️', deleted: '🗑️', overdue: '⚠️', viewed: '👁️' };
+    return map[action] || '📋';
 };
 
 const InvoiceDetail = () => {
@@ -78,6 +83,9 @@ const InvoiceDetail = () => {
                             <HiOutlinePaperAirplane /> Mark Sent
                         </button>
                     )}
+                    <Link to={`/invoices/${id}/edit`} className="btn btn-secondary btn-sm">
+                        <HiOutlinePencil /> Edit
+                    </Link>
                     <button className="btn btn-danger btn-sm" onClick={handleDelete} disabled={acting}>
                         <HiOutlineTrash /> Delete
                     </button>
@@ -136,6 +144,44 @@ const InvoiceDetail = () => {
                 <div className="card" style={{ marginTop: 20 }}>
                     <h4 style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>Notes</h4>
                     <p style={{ fontSize: 14, color: 'var(--text-secondary)', whiteSpace: 'pre-wrap' }}>{invoice.notes}</p>
+                </div>
+            )}
+
+            {/* Activity Timeline */}
+            {invoice.activityLogs && invoice.activityLogs.length > 0 && (
+                <div className="card" style={{ marginTop: 20 }}>
+                    <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 8 }}>
+                        <HiOutlineClock /> Activity Timeline
+                    </h3>
+                    <div style={{ position: 'relative', paddingLeft: 24 }}>
+                        <div style={{ position: 'absolute', left: 8, top: 4, bottom: 4, width: 2, background: 'var(--border)', borderRadius: 1 }} />
+                        {invoice.activityLogs.map((log, idx) => (
+                            <div key={log.id} style={{ position: 'relative', paddingBottom: idx < invoice.activityLogs.length - 1 ? 20 : 0 }}>
+                                <div style={{
+                                    position: 'absolute', left: -20, top: 2, width: 18, height: 18,
+                                    display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 10,
+                                    background: 'var(--surface)', border: '2px solid var(--border)', borderRadius: '50%',
+                                    zIndex: 1,
+                                }}>
+                                    {actionIcon(log.action)}
+                                </div>
+                                <div style={{ paddingLeft: 8 }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                                        <span style={{ fontWeight: 600, fontSize: 13, textTransform: 'capitalize' }}>{log.action}</span>
+                                        <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                                            {new Date(log.createdAt).toLocaleString()}
+                                        </span>
+                                        {log.user && (
+                                            <span style={{ fontSize: 12, color: 'var(--text-muted)' }}>
+                                                by {log.user.firstName} {log.user.lastName}
+                                            </span>
+                                        )}
+                                    </div>
+                                    {log.details && <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: '2px 0 0' }}>{log.details}</p>}
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             )}
         </div>
