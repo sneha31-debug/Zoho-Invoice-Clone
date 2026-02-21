@@ -43,7 +43,11 @@ const Sidebar = () => {
     return (
         <aside className="sidebar">
             <div className="sidebar-brand">
-                <div className="brand-icon">Z</div>
+                {user?.organization?.logo ? (
+                    <img src={user.organization.logo.startsWith('http') ? user.organization.logo : `${import.meta.env.VITE_API_BASE || ''}${user.organization.logo}`} alt="Logo" className="brand-logo-img" />
+                ) : (
+                    <div className="brand-icon">Z</div>
+                )}
                 <div className="brand-text">
                     <span className="brand-name">Zoho Invoice</span>
                     <span className="brand-org">{user?.organization?.name || 'My Organization'}</span>

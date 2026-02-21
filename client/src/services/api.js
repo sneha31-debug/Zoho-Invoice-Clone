@@ -131,4 +131,12 @@ export const notificationAPI = {
     markAllRead: () => api.patch('/notifications/read-all'),
 };
 
+export const organizationAPI = {
+    get: () => api.get('/organizations'),
+    update: (data) => api.put('/organizations', data),
+    uploadLogo: (formData) => api.post('/organizations/logo', formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
+};
+
 export default api;

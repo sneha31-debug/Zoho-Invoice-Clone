@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
-import { authAPI } from '../../services/api';
+import { authAPI, organizationAPI } from '../../services/api';
 import toast from 'react-hot-toast';
 import './Settings.css';
 
@@ -95,6 +95,35 @@ const Settings = () => {
                         <div className="card settings-card">
                             <h2>Organization Settings</h2>
                             <p className="settings-desc">Manage your company information</p>
+
+                            <div className="logo-upload-section">
+                                <div className="logo-preview">
+                                    {org.logo ? (
+                                        <img src={org.logo.startsWith('http') ? org.logo : `${import.meta.env.VITE_API_BASE || ''}${org.logo}`} alt="Logo" />
+                                    ) : (
+                                        <div className="logo-placeholder">Z</div>
+                                    )}
+                                </div>
+                                <div className="logo-actions">
+                                    <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                                        Change Logo
+                                        <input type="file" hidden accept="image/*" onChange={async (e) => {
+                                            const file = e.target.files[0];
+                                            if (!file) return;
+                                            const formData = new FormData();
+                                            formData.append('logo', file);
+                                            try {
+                                                const res = await organizationAPI.uploadLogo(formData);
+                                                setOrg({ ...org, logo: res.data.data.logo });
+                                                toast.success('Logo updated');
+                                                // Note: we might need to update AuthContext if logo is there too
+                                            } catch (err) { toast.error(err.response?.data?.message || 'Upload failed'); }
+                                        }} />
+                                    </label>
+                                    <p className="text-muted" style={{ fontSize: 12, marginTop: 4 }}>Recommended: Square image, max 2MB</p>
+                                </div>
+                            </div>
+
                             <form onSubmit={handleOrgSave}>
                                 <div className="form-row">
                                     <div className="form-group"><label>Organization Name *</label><input value={org.name} onChange={(e) => setOrg({ ...org, name: e.target.value })} required /></div>

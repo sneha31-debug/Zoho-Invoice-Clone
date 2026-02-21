@@ -17,12 +17,15 @@ const reportRoutes = require('./routes/reportRoutes');
 const creditNoteRoutes = require('./routes/creditNoteRoutes');
 const recurringInvoiceRoutes = require('./routes/recurringInvoiceRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
+const organizationRoutes = require('./routes/organizationRoutes');
+const path = require('path');
 
 const app = express();
 
 // ─── Global Middleware ───────────────────────────────────
 app.use(cors());
 app.use(express.json());
+app.use('/public', express.static(path.join(__dirname, '../public')));
 app.use(express.urlencoded({ extended: true }));
 app.use(morgan('dev'));
 
@@ -44,6 +47,7 @@ app.use('/api/v1/reports', reportRoutes);
 app.use('/api/v1/credit-notes', creditNoteRoutes);
 app.use('/api/v1/recurring-invoices', recurringInvoiceRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
+app.use('/api/v1/organizations', organizationRoutes);
 
 // ─── Error Handler (must be last) ────────────────────────
 app.use(errorHandler);
@@ -53,11 +57,13 @@ const { startRecurringInvoiceCron } = require('./cron/recurringInvoiceCron');
 const { startOverdueInvoiceCron } = require('./cron/overdueInvoiceCron');
 
 // ─── Start Server ────────────────────────────────────────
-app.listen(PORT, () => {
-    console.log(`🚀 Server running on http://localhost:${PORT}`);
-    console.log(`📋 Health check: http://localhost:${PORT}/api/v1/health`);
-    startRecurringInvoiceCron();
-    startOverdueInvoiceCron();
-});
+if (process.env.NODE_ENV !== 'test') {
+    app.listen(PORT, () => {
+        console.log(`🚀 Server running on http://localhost:${PORT}`);
+        console.log(`📋 Health check: http://localhost:${PORT}/api/v1/health`);
+        startRecurringInvoiceCron();
+        startOverdueInvoiceCron();
+    });
+}
 
 module.exports = app;

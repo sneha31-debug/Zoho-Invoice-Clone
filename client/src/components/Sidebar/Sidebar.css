@@ -32,6 +32,14 @@
     color: white;
 }
 
+.brand-logo-img {
+    width: 40px;
+    height: 40px;
+    object-fit: contain;
+    border-radius: var(--radius-sm);
+    background: white;
+}
+
 .brand-text {
     display: flex;
     flex-direction: column;
