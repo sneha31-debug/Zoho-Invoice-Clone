@@ -18,12 +18,17 @@ const creditNoteRoutes = require('./routes/creditNoteRoutes');
 const recurringInvoiceRoutes = require('./routes/recurringInvoiceRoutes');
 const notificationRoutes = require('./routes/notificationRoutes');
 const organizationRoutes = require('./routes/organizationRoutes');
+const razorpayRoutes = require('./routes/razorpayRoutes');
 const path = require('path');
 
 const app = express();
 
 // ─── Global Middleware ───────────────────────────────────
 app.use(cors());
+
+// Razorpay routes
+app.use('/api/v1/razorpay', razorpayRoutes);
+
 app.use(express.json());
 app.use('/public', express.static(path.join(__dirname, '../public')));
 app.use(express.urlencoded({ extended: true }));

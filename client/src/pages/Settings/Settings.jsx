@@ -5,11 +5,12 @@ import toast from 'react-hot-toast';
 import './Settings.css';
 
 const Settings = () => {
-    const { user } = useAuth();
+    const { user, updateUser } = useAuth();
     const [activeTab, setActiveTab] = useState('profile');
     const [profile, setProfile] = useState({ firstName: '', lastName: '', email: '', phone: '' });
-    const [org, setOrg] = useState({ name: '', email: '', phone: '', address: '', city: '', state: '', zipCode: '', country: '', taxId: '', currency: 'USD', website: '' });
+    const [org, setOrg] = useState({ name: '', email: '', phone: '', address: '', city: '', state: '', zipCode: '', country: '', taxId: '', currency: 'USD', website: '', logo: '' });
     const [saving, setSaving] = useState(false);
+    const [showPreviewModal, setShowPreviewModal] = useState(false);
 
     useEffect(() => {
         if (user) {
@@ -27,6 +28,7 @@ const Settings = () => {
                     taxId: user.organization.taxId || '',
                     currency: user.organization.currency || 'USD',
                     website: user.organization.website || '',
+                    logo: user.organization.logo || '',
                 });
             }
         }
@@ -36,7 +38,8 @@ const Settings = () => {
         e.preventDefault();
         setSaving(true);
         try {
-            await authAPI.updateProfile(profile);
+            const res = await authAPI.updateProfile(profile);
+            updateUser(res.data.data);
             toast.success('Profile updated');
         } catch (err) { toast.error(err.response?.data?.message || 'Failed to update'); }
         setSaving(false);
@@ -46,7 +49,8 @@ const Settings = () => {
         e.preventDefault();
         setSaving(true);
         try {
-            await authAPI.updateOrg(org);
+            const res = await authAPI.updateOrg(org);
+            updateUser({ organization: res.data.data });
             toast.success('Organization updated');
         } catch (err) { toast.error(err.response?.data?.message || 'Failed to update'); }
         setSaving(false);
@@ -57,6 +61,14 @@ const Settings = () => {
         { key: 'organization', label: 'Organization' },
         { key: 'preferences', label: 'Preferences' },
     ];
+
+    const getLogoUrl = (logo) => {
+        if (!logo) return null;
+        if (logo.startsWith('http')) return logo;
+        return `${import.meta.env.VITE_API_BASE || ''}${logo}`;
+    };
+
+    const logoUrl = getLogoUrl(org.logo);
 
     return (
         <div className="fade-in">
@@ -97,29 +109,47 @@ const Settings = () => {
                             <p className="settings-desc">Manage your company information</p>
 
                             <div className="logo-upload-section">
-                                <div className="logo-preview">
-                                    {org.logo ? (
-                                        <img src={org.logo.startsWith('http') ? org.logo : `${import.meta.env.VITE_API_BASE || ''}${org.logo}`} alt="Logo" />
-                                    ) : (
-                                        <div className="logo-placeholder">Z</div>
-                                    )}
+                                <div className="logo-preview-container">
+                                    <div className="logo-preview clickable" onClick={() => setShowPreviewModal(true)} title="Click to preview">
+                                        {logoUrl ? (
+                                            <img src={logoUrl} alt="Logo" />
+                                        ) : (
+                                            <div className="logo-premium-z">Z</div>
+                                        )}
+                                    </div>
+                                    <p className="text-muted" style={{ fontSize: 10, textAlign: 'center', marginTop: 4 }}>Click to enlarge</p>
                                 </div>
                                 <div className="logo-actions">
-                                    <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
-                                        Change Logo
-                                        <input type="file" hidden accept="image/*" onChange={async (e) => {
-                                            const file = e.target.files[0];
-                                            if (!file) return;
-                                            const formData = new FormData();
-                                            formData.append('logo', file);
-                                            try {
-                                                const res = await organizationAPI.uploadLogo(formData);
-                                                setOrg({ ...org, logo: res.data.data.logo });
-                                                toast.success('Logo updated');
-                                                // Note: we might need to update AuthContext if logo is there too
-                                            } catch (err) { toast.error(err.response?.data?.message || 'Upload failed'); }
-                                        }} />
-                                    </label>
+                                    <div className="logo-button-group">
+                                        <label className="btn btn-secondary btn-sm" style={{ cursor: 'pointer' }}>
+                                            Change Logo
+                                            <input type="file" hidden accept="image/*" onChange={async (e) => {
+                                                const file = e.target.files[0];
+                                                if (!file) return;
+                                                const formData = new FormData();
+                                                formData.append('logo', file);
+                                                try {
+                                                    const res = await organizationAPI.uploadLogo(formData);
+                                                    setOrg({ ...org, logo: res.data.data.logo });
+                                                    updateUser({ organization: res.data.data });
+                                                    toast.success('Logo updated');
+                                                } catch (err) { toast.error(err.response?.data?.message || 'Upload failed'); }
+                                            }} />
+                                        </label>
+                                        {org.logo && (
+                                            <button type="button" className="btn btn-secondary btn-sm btn-danger-text" onClick={async () => {
+                                                if (!window.confirm('Are you sure you want to remove the logo?')) return;
+                                                try {
+                                                    const res = await organizationAPI.deleteLogo();
+                                                    setOrg({ ...org, logo: null });
+                                                    updateUser({ organization: res.data.data });
+                                                    toast.success('Logo removed');
+                                                } catch (err) { toast.error(err.response?.data?.message || 'Failed to remove logo'); }
+                                            }}>
+                                                Remove
+                                            </button>
+                                        )}
+                                    </div>
                                     <p className="text-muted" style={{ fontSize: 12, marginTop: 4 }}>Recommended: Square image, max 2MB</p>
                                 </div>
                             </div>
@@ -176,6 +206,23 @@ const Settings = () => {
                     )}
                 </div>
             </div>
+            {showPreviewModal && (
+                <div className="modal-overlay" onClick={() => setShowPreviewModal(false)}>
+                    <div className="modal logo-preview-modal" onClick={e => e.stopPropagation()}>
+                        <h2>Logo Preview</h2>
+                        <div className="preview-large">
+                            {logoUrl ? (
+                                <img src={logoUrl} alt="Large Logo" />
+                            ) : (
+                                <div className="logo-premium-z lg">Z</div>
+                            )}
+                        </div>
+                        <div className="modal-actions">
+                            <button className="btn btn-secondary" onClick={() => setShowPreviewModal(false)}>Close</button>
+                        </div>
+                    </div>
+                </div>
+            )}
         </div>
     );
 };

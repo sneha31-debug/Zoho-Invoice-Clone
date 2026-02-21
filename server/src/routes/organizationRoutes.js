@@ -24,8 +24,13 @@ const upload = multer({
         const allowed = /jpeg|jpg|png|webp/;
         const ext = allowed.test(path.extname(file.originalname).toLowerCase());
         const mime = allowed.test(file.mimetype);
-        if (ext && mime) cb(null, true);
-        else cb(new Error('Only images (jpeg, jpg, png, webp) are allowed!'));
+        if (ext && mime) {
+            cb(null, true);
+        } else {
+            const error = new Error('Only images (jpeg, jpg, png, webp) are allowed!');
+            error.statusCode = 400;
+            cb(error);
+        }
     }
 });
 
@@ -34,5 +39,6 @@ router.use(authMiddleware);
 router.get('/', organizationController.getOrganization);
 router.put('/', authorize('ADMIN', 'MANAGER'), organizationController.updateOrganization);
 router.post('/logo', authorize('ADMIN', 'MANAGER'), upload.single('logo'), organizationController.uploadLogo);
+router.delete('/logo', authorize('ADMIN', 'MANAGER'), organizationController.deleteLogo);
 
 module.exports = router;

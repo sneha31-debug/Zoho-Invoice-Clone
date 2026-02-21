@@ -2,7 +2,7 @@ const quoteService = require('../services/quoteService');
 
 const create = async (req, res, next) => {
     try {
-        const quote = await quoteService.create(req.user.organizationId, req.body);
+        const quote = await quoteService.create(req.user.organizationId, req.body, req.user.id);
         res.status(201).json({ success: true, data: quote });
     } catch (error) { next(error); }
 };
@@ -23,21 +23,21 @@ const findById = async (req, res, next) => {
 
 const update = async (req, res, next) => {
     try {
-        const quote = await quoteService.update(req.user.organizationId, req.params.id, req.body);
+        const quote = await quoteService.update(req.user.organizationId, req.params.id, req.body, req.user.id);
         res.json({ success: true, data: quote });
     } catch (error) { next(error); }
 };
 
 const remove = async (req, res, next) => {
     try {
-        await quoteService.remove(req.user.organizationId, req.params.id);
+        await quoteService.remove(req.user.organizationId, req.params.id, req.user.id);
         res.json({ success: true, message: 'Quote deleted successfully' });
     } catch (error) { next(error); }
 };
 
 const convertToInvoice = async (req, res, next) => {
     try {
-        const invoice = await quoteService.convertToInvoice(req.user.organizationId, req.params.id, req.body.dueDate);
+        const invoice = await quoteService.convertToInvoice(req.user.organizationId, req.params.id, req.body.dueDate, req.user.id);
         res.status(201).json({ success: true, data: invoice });
     } catch (error) { next(error); }
 };

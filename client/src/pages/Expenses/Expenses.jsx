@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { expenseAPI, customerAPI, invoiceAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
-import { HiOutlinePlusCircle, HiOutlineTrash, HiOutlineDocumentText } from 'react-icons/hi';
+import { HiOutlinePlusCircle, HiOutlineTrash, HiOutlineDocumentText, HiOutlinePaperClip, HiOutlineEye } from 'react-icons/hi';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
 
@@ -18,6 +18,7 @@ const Expenses = () => {
     const [form, setForm] = useState({ amount: '', category: 'OTHER', merchant: '', description: '', isBillable: false, customerId: '' });
     const [selected, setSelected] = useState([]);
     const [converting, setConverting] = useState(false);
+    const [receipt, setReceipt] = useState(null);
 
     const fetchExpenses = async () => {
         try { const res = await expenseAPI.getAll({ limit: 50 }); setData(res.data.data); }
@@ -33,9 +34,19 @@ const Expenses = () => {
     const handleCreate = async (e) => {
         e.preventDefault();
         try {
-            await expenseAPI.create({ ...form, amount: Number(form.amount) });
+            const res = await expenseAPI.create({ ...form, amount: Number(form.amount) });
+            const expenseId = res.data.data.id;
+
+            if (receipt) {
+                const formData = new FormData();
+                formData.append('receipt', receipt);
+                await expenseAPI.uploadReceipt(expenseId, formData);
+            }
+
             toast.success('Expense added');
-            setShowModal(false); fetchExpenses();
+            setShowModal(false);
+            setReceipt(null);
+            fetchExpenses();
         } catch (err) { toast.error(err.response?.data?.message || 'Failed'); }
     };
 
@@ -117,9 +128,16 @@ const Expenses = () => {
                                         </td>
                                         <td>{e.user?.firstName} {e.user?.lastName}</td>
                                         <td>
-                                            {user?.role !== 'VIEWER' && (
-                                                <button className="btn btn-danger btn-sm" onClick={() => handleDelete(e.id)}><HiOutlineTrash /></button>
-                                            )}
+                                            <div style={{ display: 'flex', gap: 8 }}>
+                                                {e.receiptUrl && (
+                                                    <a href={e.receiptUrl} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm" title="View Receipt">
+                                                        <HiOutlineEye />
+                                                    </a>
+                                                )}
+                                                {user?.role !== 'VIEWER' && (
+                                                    <button className="btn btn-danger btn-sm" onClick={() => handleDelete(e.id)} title="Delete"><HiOutlineTrash /></button>
+                                                )}
+                                            </div>
                                         </td>
                                     </tr>
                                 ))}
@@ -151,6 +169,30 @@ const Expenses = () => {
                                 </select>
                             </div>
                             <div className="form-group"><label style={{ display: 'flex', alignItems: 'center', gap: 8 }}><input type="checkbox" checked={form.isBillable} onChange={(e) => setForm({ ...form, isBillable: e.target.checked })} style={{ width: 'auto' }} /> Billable to customer</label></div>
+                            <div className="form-group">
+                                <label>Receipt (Image or PDF)</label>
+                                <div style={{
+                                    border: '1px dashed var(--border)',
+                                    padding: '12px',
+                                    borderRadius: 'var(--radius-md)',
+                                    textAlign: 'center',
+                                    background: 'rgba(255,255,255,0.03)'
+                                }}>
+                                    <input
+                                        type="file"
+                                        accept="image/*,.pdf"
+                                        onChange={(e) => setReceipt(e.target.files[0])}
+                                        style={{ display: 'none' }}
+                                        id="receipt-upload"
+                                    />
+                                    <label htmlFor="receipt-upload" style={{ cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                                        <HiOutlinePaperClip size={20} color="var(--primary)" />
+                                        <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
+                                            {receipt ? receipt.name : 'Click to attach receipt'}
+                                        </span>
+                                    </label>
+                                </div>
+                            </div>
                             <div className="modal-actions">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
                                 <button type="submit" className="btn btn-primary">Add Expense</button>

@@ -35,4 +35,19 @@ const remove = async (req, res, next) => {
     } catch (error) { next(error); }
 };
 
-module.exports = { create, findAll, findById, update, remove };
+const uploadReceipt = async (req, res, next) => {
+    try {
+        if (!req.file) {
+            const error = new Error('No file uploaded');
+            error.statusCode = 400;
+            return next(error);
+        }
+
+        const receiptUrl = `/public/uploads/${req.file.filename}`;
+        const expense = await expenseService.update(req.user.organizationId, req.params.id, { receiptUrl });
+
+        res.json({ success: true, data: expense });
+    } catch (error) { next(error); }
+};
+
+module.exports = { create, findAll, findById, update, remove, uploadReceipt };

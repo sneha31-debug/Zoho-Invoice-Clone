@@ -42,6 +42,7 @@ enum PaymentMethod {
   BANK_TRANSFER
   PAYPAL
   STRIPE
+  RAZORPAY
   CASH
   CHECK
   OTHER
@@ -280,6 +281,7 @@ model Quote {
   customer   Customer @relation(fields: [customerId], references: [id])
 
   items QuoteItem[]
+  activityLogs ActivityLog[]
 
   @@unique([organizationId, quoteNumber])
   @@map("quotes")
@@ -440,12 +442,15 @@ model RecurringInvoice {
 
 model ActivityLog {
   id        String   @id @default(uuid())
-  action    String   // e.g. "created", "sent", "viewed", "paid"
+  action    String   // e.g. "created", "sent", "viewed", "paid", "converted"
   details   String?
   createdAt DateTime @default(now())
 
-  invoiceId String
-  invoice   Invoice @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  invoiceId String?
+  invoice   Invoice? @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+
+  quoteId   String?
+  quote     Quote?   @relation(fields: [quoteId], references: [id], onDelete: Cascade)
 
   userId String?
   user   User?  @relation(fields: [userId], references: [id])

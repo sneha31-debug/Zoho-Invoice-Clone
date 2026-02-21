@@ -1,34 +1,64 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { invoiceAPI, customerAPI, itemAPI } from '../../services/api';
-import { HiOutlinePlusCircle, HiOutlineTrash } from 'react-icons/hi';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { quoteAPI, customerAPI } from '../../services/api';
+import { HiOutlinePlusCircle, HiOutlineTrash, HiOutlineArrowLeft } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 
-const CreateInvoice = () => {
+const EditQuote = () => {
+    const { id } = useParams();
     const navigate = useNavigate();
     const [customers, setCustomers] = useState([]);
-    const [items, setItems] = useState([]);
-    const [loading, setLoading] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
     const [form, setForm] = useState({
-        customerId: '', dueDate: '', notes: '', discountAmount: 0,
-        items: [{ description: '', quantity: 1, rate: 0, taxRate: 0, itemId: '' }],
-        customFields: [],
+        customerId: '',
+        expiryDate: '',
+        notes: '',
+        items: [{ description: '', quantity: 1, rate: 0, taxRate: 0 }],
+        customFields: []
     });
 
     useEffect(() => {
-        Promise.all([customerAPI.getAll({ limit: 100 }), itemAPI.getAll({ limit: 100 })])
-            .then(([c, i]) => { setCustomers(c.data.data.customers); setItems(i.data.data.items); });
-    }, []);
+        const load = async () => {
+            try {
+                const [qRes, cRes] = await Promise.all([
+                    quoteAPI.getById(id),
+                    customerAPI.getAll({ limit: 100 })
+                ]);
+                const q = qRes.data.data;
+                const date = q.expiryDate ? new Date(q.expiryDate).toISOString().split('T')[0] : '';
 
-    const addLine = () => setForm({ ...form, items: [...form.items, { description: '', quantity: 1, rate: 0, taxRate: 0, itemId: '' }] });
+                // Convert customFields object to array for the form
+                const cfArray = q.customFields ? Object.entries(q.customFields).map(([label, value]) => ({ label, value })) : [];
+
+                setForm({
+                    customerId: q.customerId,
+                    expiryDate: date,
+                    notes: q.notes || '',
+                    items: q.items.map(i => ({
+                        description: i.description,
+                        quantity: i.quantity,
+                        rate: i.rate,
+                        taxRate: i.taxRate
+                    })),
+                    customFields: cfArray
+                });
+                setCustomers(cRes.data.data.customers);
+            } catch (err) {
+                toast.error('Failed to load quote data');
+                navigate('/quotes');
+            } finally {
+                setLoading(false);
+            }
+        };
+        load();
+    }, [id, navigate]);
+
+    const addLine = () => setForm({ ...form, items: [...form.items, { description: '', quantity: 1, rate: 0, taxRate: 0 }] });
     const removeLine = (i) => setForm({ ...form, items: form.items.filter((_, idx) => idx !== i) });
-    const updateLine = (i, field, value) => {
+    const updateLine = (i, f, v) => {
         const newItems = [...form.items];
-        newItems[i][field] = value;
-        if (field === 'itemId' && value) {
-            const itm = items.find((it) => it.id === value);
-            if (itm) { newItems[i].description = itm.name; newItems[i].rate = itm.rate; newItems[i].taxRate = itm.taxRate || 0; }
-        }
+        newItems[i][f] = v;
         setForm({ ...form, items: newItems });
     };
 
@@ -42,38 +72,47 @@ const CreateInvoice = () => {
 
     const subtotal = form.items.reduce((s, l) => s + l.quantity * l.rate, 0);
     const tax = form.items.reduce((s, l) => s + l.quantity * l.rate * (l.taxRate / 100), 0);
-    const total = subtotal + tax - (form.discountAmount || 0);
+    const total = subtotal + tax;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true);
+        setSaving(true);
         try {
             const payload = {
                 customerId: form.customerId,
-                dueDate: new Date(form.dueDate).toISOString(),
+                expiryDate: form.expiryDate ? new Date(form.expiryDate).toISOString() : undefined,
                 notes: form.notes || undefined,
-                discountAmount: Number(form.discountAmount) || 0,
                 items: form.items.map((item) => ({
                     description: item.description || '',
                     quantity: Number(item.quantity),
                     rate: Number(item.rate),
                     taxRate: Number(item.taxRate) || 0,
-                    itemId: item.itemId && item.itemId !== '' ? item.itemId : undefined,
                 })),
                 customFields: form.customFields.length > 0
-                    ? Object.fromEntries(form.customFields.map(f => [f.label, f.value]))
-                    : undefined,
+                    ? Object.fromEntries(form.customFields.filter(f => f.label).map(f => [f.label, f.value]))
+                    : {},
             };
-            await invoiceAPI.create(payload);
-            toast.success('Invoice created!');
-            navigate('/invoices');
-        } catch (err) { toast.error(err.response?.data?.message || 'Failed to create invoice'); }
-        setLoading(false);
+            await quoteAPI.update(id, payload);
+            toast.success('Quote updated!');
+            navigate(`/quotes/${id}`);
+        } catch (err) {
+            toast.error(err.response?.data?.message || 'Failed to update quote');
+        } finally {
+            setSaving(false);
+        }
     };
+
+    if (loading) return <div className="loading-spinner" />;
 
     return (
         <div className="fade-in">
-            <div className="page-header"><h1>New Invoice</h1></div>
+            <div className="page-header">
+                <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+                    <Link to={`/quotes/${id}`} className="btn btn-secondary btn-sm"><HiOutlineArrowLeft /></Link>
+                    <h1>Edit Quote</h1>
+                </div>
+            </div>
+
             <form onSubmit={handleSubmit}>
                 <div className="card" style={{ marginBottom: 20 }}>
                     <div className="form-row">
@@ -85,8 +124,8 @@ const CreateInvoice = () => {
                             </select>
                         </div>
                         <div className="form-group">
-                            <label>Due Date *</label>
-                            <input type="date" value={form.dueDate} onChange={(e) => setForm({ ...form, dueDate: e.target.value })} required />
+                            <label>Expiry Date</label>
+                            <input type="date" value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.target.value })} />
                         </div>
                     </div>
                 </div>
@@ -98,17 +137,11 @@ const CreateInvoice = () => {
                     </div>
                     <div className="table-container">
                         <table>
-                            <thead><tr><th>Item</th><th>Description</th><th style={{ width: 90 }}>Qty</th><th style={{ width: 110 }}>Rate</th><th style={{ width: 90 }}>Tax %</th><th style={{ width: 110 }}>Amount</th><th style={{ width: 50 }}></th></tr></thead>
+                            <thead><tr><th>Description</th><th style={{ width: 90 }}>Qty</th><th style={{ width: 110 }}>Rate</th><th style={{ width: 90 }}>Tax %</th><th style={{ width: 110 }}>Amount</th><th style={{ width: 50 }}></th></tr></thead>
                             <tbody>
                                 {form.items.map((line, i) => (
                                     <tr key={i}>
-                                        <td>
-                                            <select value={line.itemId} onChange={(e) => updateLine(i, 'itemId', e.target.value)} style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13 }}>
-                                                <option value="">Custom</option>
-                                                {items.map((it) => <option key={it.id} value={it.id}>{it.name}</option>)}
-                                            </select>
-                                        </td>
-                                        <td><input style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13 }} value={line.description} onChange={(e) => updateLine(i, 'description', e.target.value)} placeholder="Description" /></td>
+                                        <td><input style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13 }} value={line.description} onChange={(e) => updateLine(i, 'description', e.target.value)} placeholder="Description" required /></td>
                                         <td><input type="number" min="0.01" step="0.01" style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13 }} value={line.quantity} onChange={(e) => updateLine(i, 'quantity', Number(e.target.value))} /></td>
                                         <td><input type="number" min="0" step="0.01" style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13 }} value={line.rate} onChange={(e) => updateLine(i, 'rate', Number(e.target.value))} /></td>
                                         <td><input type="number" min="0" step="0.01" style={{ width: '100%', padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 13 }} value={line.taxRate} onChange={(e) => updateLine(i, 'taxRate', Number(e.target.value))} /></td>
@@ -125,6 +158,7 @@ const CreateInvoice = () => {
                     <div className="card">
                         <div className="form-group"><label>Notes</label><textarea rows="3" value={form.notes} onChange={(e) => setForm({ ...form, notes: e.target.value })} placeholder="Notes visible to customer…" /></div>
                     </div>
+
                     <div className="card">
                         <div className="card-header" style={{ marginBottom: 12 }}>
                             <h3 style={{ fontSize: 14 }}>Custom Fields</h3>
@@ -139,25 +173,22 @@ const CreateInvoice = () => {
                         ))}
                         {form.customFields.length === 0 && <p style={{ fontSize: 12, color: 'var(--text-secondary)', textAlign: 'center' }}>No custom fields added</p>}
                     </div>
+
                     <div className="card">
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}><span>Subtotal</span><span>${subtotal.toFixed(2)}</span></div>
                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8, fontSize: 14 }}><span>Tax</span><span>${tax.toFixed(2)}</span></div>
-                        <div className="form-group" style={{ marginBottom: 8 }}>
-                            <label style={{ fontSize: 13 }}>Discount</label>
-                            <input type="number" min="0" step="0.01" value={form.discountAmount} onChange={(e) => setForm({ ...form, discountAmount: e.target.value })} />
-                        </div>
                         <hr style={{ border: 'none', borderTop: '2px solid var(--border)', margin: '12px 0' }} />
                         <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 18, fontWeight: 700 }}><span>Total</span><span>${total.toFixed(2)}</span></div>
                     </div>
                 </div>
 
                 <div style={{ display: 'flex', gap: 12, justifyContent: 'flex-end', marginTop: 24 }}>
-                    <button type="button" className="btn btn-secondary" onClick={() => navigate('/invoices')}>Cancel</button>
-                    <button type="submit" className="btn btn-primary" disabled={loading}>{loading ? 'Creating…' : 'Create Invoice'}</button>
+                    <button type="button" className="btn btn-secondary" onClick={() => navigate(`/quotes/${id}`)}>Cancel</button>
+                    <button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving…' : 'Update Quote'}</button>
                 </div>
             </form>
         </div>
     );
 };
 
-export default CreateInvoice;
+export default EditQuote;

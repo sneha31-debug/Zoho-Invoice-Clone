@@ -1,4 +1,5 @@
 const prisma = require('../models/prismaClient');
+const { logActivity } = require('./activityService');
 
 const generateInvoiceNumber = async (organizationId) => {
     const count = await prisma.invoice.count({ where: { organizationId } });
@@ -16,12 +17,6 @@ const calculateTotals = (items) => {
         return { ...item, amount };
     });
     return { processedItems, subtotal, taxAmount, totalAmount: subtotal + taxAmount };
-};
-
-const logActivity = async (invoiceId, action, details, userId) => {
-    return prisma.activityLog.create({
-        data: { invoiceId, action, details: details || null, userId: userId || null },
-    });
 };
 
 const create = async (organizationId, data, userId) => {
@@ -70,7 +65,12 @@ const create = async (organizationId, data, userId) => {
         include: { items: true, customer: true },
     });
 
-    await logActivity(invoice.id, 'created', `Invoice ${invoiceNumber} created for $${finalTotal.toLocaleString()}`, userId);
+    await logActivity({
+        invoiceId: invoice.id,
+        action: 'created',
+        details: `Invoice ${invoiceNumber} created for $${finalTotal.toLocaleString()}`,
+        userId
+    });
     return invoice;
 };
 
@@ -175,9 +175,9 @@ const update = async (organizationId, id, data, userId) => {
         const detail = data.status === 'PAID'
             ? `Invoice marked as paid — $${(existing.totalAmount || 0).toLocaleString()}`
             : `Invoice status changed to ${data.status}`;
-        await logActivity(id, action, detail, userId);
+        await logActivity({ invoiceId: id, action, details: detail, userId });
     } else {
-        await logActivity(id, 'updated', 'Invoice details updated', userId);
+        await logActivity({ invoiceId: id, action: 'updated', details: 'Invoice details updated', userId });
     }
 
     return result;
@@ -185,7 +185,7 @@ const update = async (organizationId, id, data, userId) => {
 
 const remove = async (organizationId, id, userId) => {
     const inv = await findById(organizationId, id);
-    await logActivity(id, 'deleted', `Invoice ${inv.invoiceNumber} deleted`, userId);
+    await logActivity({ invoiceId: id, action: 'deleted', details: `Invoice ${inv.invoiceNumber} deleted`, userId });
     return prisma.invoice.delete({ where: { id } });
 };
 

@@ -89,6 +89,9 @@ export const expenseAPI = {
     create: (data) => api.post('/expenses', data),
     update: (id, data) => api.put(`/expenses/${id}`, data),
     delete: (id) => api.delete(`/expenses/${id}`),
+    uploadReceipt: (id, formData) => api.post(`/expenses/${id}/receipt`, formData, {
+        headers: { 'Content-Type': 'multipart/form-data' }
+    }),
 };
 
 // Time Tracking
@@ -137,6 +140,11 @@ export const organizationAPI = {
     uploadLogo: (formData) => api.post('/organizations/logo', formData, {
         headers: { 'Content-Type': 'multipart/form-data' }
     }),
+    deleteLogo: () => api.delete('/organizations/logo'),
+};
+
+export const razorpayAPI = {
+    createOrder: (invoiceId) => api.post('/razorpay/create-order', { invoiceId }),
 };
 
 export default api;

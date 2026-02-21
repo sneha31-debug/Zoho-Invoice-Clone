@@ -11,6 +11,8 @@ import InvoiceDetail from './pages/Invoices/InvoiceDetail';
 import Customers from './pages/Customers/Customers';
 import Items from './pages/Items/Items';
 import Quotes from './pages/Quotes/Quotes';
+import QuoteDetail from './pages/Quotes/QuoteDetail';
+import EditQuote from './pages/Quotes/EditQuote';
 import Payments from './pages/Payments/Payments';
 import Expenses from './pages/Expenses/Expenses';
 import TimeTracking from './pages/TimeTracking/TimeTracking';
@@ -44,6 +46,8 @@ function App() {
             <Route path="/customers/:id/statement" element={<CustomerStatement />} />
             <Route path="/items" element={<Items />} />
             <Route path="/quotes" element={<Quotes />} />
+            <Route path="/quotes/:id" element={<QuoteDetail />} />
+            <Route path="/quotes/:id/edit" element={<EditQuote />} />
             <Route path="/payments" element={<Payments />} />
             <Route path="/expenses" element={<Expenses />} />
             <Route path="/time-tracking" element={<TimeTracking />} />

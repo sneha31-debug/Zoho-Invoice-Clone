@@ -29,7 +29,7 @@ const uploadLogo = async (req, res, next) => {
             return next(error);
         }
 
-        const logoUrl = `/uploads/${req.file.filename}`;
+        const logoUrl = `/public/uploads/${req.file.filename}`;
 
         // Get current organization to delete old logo if exists
         const org = await prisma.organization.findUnique({
@@ -37,8 +37,9 @@ const uploadLogo = async (req, res, next) => {
             select: { logo: true }
         });
 
-        if (org.logo && org.logo.startsWith('/uploads/')) {
-            const oldPath = path.join(__dirname, '../../public', org.logo);
+        if (org.logo && (org.logo.startsWith('/uploads/') || org.logo.startsWith('/public/uploads/'))) {
+            const relPath = org.logo.startsWith('/public/') ? org.logo.replace('/public/', '') : org.logo.replace('/', '');
+            const oldPath = path.join(__dirname, '../../public', relPath);
             if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
         }
 
@@ -51,8 +52,31 @@ const uploadLogo = async (req, res, next) => {
     } catch (error) { next(error); }
 };
 
+const deleteLogo = async (req, res, next) => {
+    try {
+        const org = await prisma.organization.findUnique({
+            where: { id: req.user.organizationId },
+            select: { logo: true }
+        });
+
+        if (org.logo && (org.logo.startsWith('/uploads/') || org.logo.startsWith('/public/uploads/'))) {
+            const relPath = org.logo.startsWith('/public/') ? org.logo.replace('/public/', '') : org.logo.replace('/', '');
+            const oldPath = path.join(__dirname, '../../public', relPath);
+            if (fs.existsSync(oldPath)) fs.unlinkSync(oldPath);
+        }
+
+        const updatedOrg = await prisma.organization.update({
+            where: { id: req.user.organizationId },
+            data: { logo: null }
+        });
+
+        res.json({ success: true, data: updatedOrg });
+    } catch (error) { next(error); }
+};
+
 module.exports = {
     getOrganization,
     updateOrganization,
-    uploadLogo
+    uploadLogo,
+    deleteLogo
 };

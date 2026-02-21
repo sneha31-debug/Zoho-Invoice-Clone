@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { quoteAPI, customerAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { HiOutlinePlusCircle, HiOutlineTrash, HiOutlineSwitchHorizontal } from 'react-icons/hi';
@@ -16,7 +17,7 @@ const Quotes = () => {
     const [customers, setCustomers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
-    const [form, setForm] = useState({ customerId: '', expiryDate: '', items: [{ description: '', quantity: 1, rate: 0, taxRate: 0 }] });
+    const [form, setForm] = useState({ customerId: '', expiryDate: '', items: [{ description: '', quantity: 1, rate: 0, taxRate: 0 }], customFields: [] });
 
     const fetchQuotes = async () => {
         try { const res = await quoteAPI.getAll({ limit: 50 }); setData(res.data.data); }
@@ -41,6 +42,9 @@ const Quotes = () => {
                     rate: Number(item.rate),
                     taxRate: Number(item.taxRate) || 0,
                 })),
+                customFields: form.customFields.length > 0
+                    ? Object.fromEntries(form.customFields.map(f => [f.label, f.value]))
+                    : undefined,
             };
             await quoteAPI.create(payload);
             toast.success('Quote created');
@@ -66,6 +70,14 @@ const Quotes = () => {
     const addLine = () => setForm({ ...form, items: [...form.items, { description: '', quantity: 1, rate: 0, taxRate: 0 }] });
     const updateLine = (i, f, v) => { const items = [...form.items]; items[i][f] = v; setForm({ ...form, items }); };
 
+    const addCustomField = () => setForm({ ...form, customFields: [...form.customFields, { label: '', value: '' }] });
+    const removeCustomField = (i) => setForm({ ...form, customFields: form.customFields.filter((_, idx) => idx !== i) });
+    const updateCustomField = (i, field, value) => {
+        const newFields = [...form.customFields];
+        newFields[i][field] = value;
+        setForm({ ...form, customFields: newFields });
+    };
+
     if (loading) return <div className="loading-spinner" />;
 
     return (
@@ -90,7 +102,11 @@ const Quotes = () => {
                             <tbody>
                                 {data.quotes.map((q) => (
                                     <tr key={q.id}>
-                                        <td style={{ fontWeight: 600, color: 'var(--primary)' }}>{q.quoteNumber}</td>
+                                        <td style={{ fontWeight: 600 }}>
+                                            <Link to={`/quotes/${q.id}`} style={{ color: 'var(--primary)', textDecoration: 'none' }}>
+                                                {q.quoteNumber}
+                                            </Link>
+                                        </td>
                                         <td>{q.customer?.displayName}</td>
                                         <td style={{ fontWeight: 600 }}>${Number(q.totalAmount).toLocaleString()}</td>
                                         <td>{statusBadge(q.status)}</td>
@@ -137,6 +153,19 @@ const Quotes = () => {
                                 </div>
                             ))}
                             <button type="button" className="btn btn-secondary btn-sm" onClick={addLine} style={{ marginBottom: 16 }}><HiOutlinePlusCircle /> Add Line</button>
+
+                            <h4 style={{ fontSize: 14, fontWeight: 600, marginBottom: 12, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                Custom Fields
+                                <button type="button" className="btn btn-secondary btn-sm" onClick={addCustomField} style={{ padding: '2px 8px' }}><HiOutlinePlusCircle /> Add</button>
+                            </h4>
+                            {form.customFields.map((f, i) => (
+                                <div key={i} className="form-row" style={{ gridTemplateColumns: '1fr 1fr 40px', gap: 8, marginBottom: 8 }}>
+                                    <input placeholder="Label" value={f.label} onChange={(e) => updateCustomField(i, 'label', e.target.value)} style={{ padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 12 }} />
+                                    <input placeholder="Value" value={f.value} onChange={(e) => updateCustomField(i, 'value', e.target.value)} style={{ padding: '6px 8px', border: '1px solid var(--border)', borderRadius: 'var(--radius-sm)', fontSize: 12 }} />
+                                    <button type="button" className="btn btn-danger btn-sm" onClick={() => removeCustomField(i)}><HiOutlineTrash /></button>
+                                </div>
+                            ))}
+
                             <div className="modal-actions">
                                 <button type="button" className="btn btn-secondary" onClick={() => setShowModal(false)}>Cancel</button>
                                 <button type="submit" className="btn btn-primary">Create Quote</button>

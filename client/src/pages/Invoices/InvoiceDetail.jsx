@@ -4,6 +4,7 @@ import { invoiceAPI } from '../../services/api';
 import { useAuth } from '../../context/AuthContext';
 import { HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlinePaperAirplane, HiOutlineTrash, HiOutlinePencil, HiOutlineClock, HiOutlinePrinter } from 'react-icons/hi';
 import toast from 'react-hot-toast';
+import PaymentModal from '../../components/Payment/PaymentModal';
 
 const statusBadge = (status) => {
     const map = { PAID: 'badge-success', SENT: 'badge-info', DRAFT: 'badge-secondary', OVERDUE: 'badge-danger', PARTIALLY_PAID: 'badge-warning' };
@@ -22,6 +23,7 @@ const InvoiceDetail = () => {
     const [invoice, setInvoice] = useState(null);
     const [loading, setLoading] = useState(true);
     const [acting, setActing] = useState(false);
+    const [showPaymentModal, setShowPaymentModal] = useState(false);
 
     const fetchInvoice = () => {
         invoiceAPI.getById(id).then((res) => setInvoice(res.data.data)).catch(console.error).finally(() => setLoading(false));
@@ -97,9 +99,14 @@ const InvoiceDetail = () => {
                     {user?.role !== 'VIEWER' && (
                         <>
                             {invoice.status !== 'PAID' && (
-                                <button className="btn btn-primary btn-sm" onClick={handleMarkPaid} disabled={acting}>
-                                    <HiOutlineCheckCircle /> Mark Paid
-                                </button>
+                                <>
+                                    <button className="btn btn-primary btn-sm" onClick={() => setShowPaymentModal(true)} disabled={acting}>
+                                        <HiOutlinePaperAirplane /> Pay Now
+                                    </button>
+                                    <button className="btn btn-secondary btn-sm" onClick={handleMarkPaid} disabled={acting}>
+                                        <HiOutlineCheckCircle /> Mark Paid
+                                    </button>
+                                </>
                             )}
                             {invoice.status === 'DRAFT' && (
                                 <button className="btn btn-secondary btn-sm" onClick={handleMarkSent} disabled={acting}>
@@ -177,6 +184,21 @@ const InvoiceDetail = () => {
                 </div>
             )}
 
+            {/* Custom Fields */}
+            {invoice.customFields && Object.keys(invoice.customFields).length > 0 && (
+                <div className="card" style={{ marginTop: 20 }}>
+                    <h4 style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 12, textTransform: 'uppercase' }}>Additional Information</h4>
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(200px, 1fr))', gap: 16 }}>
+                        {Object.entries(invoice.customFields).map(([label, value]) => (
+                            <div key={label}>
+                                <div style={{ fontSize: 12, color: 'var(--text-muted)', marginBottom: 2 }}>{label}</div>
+                                <div style={{ fontSize: 14, fontWeight: 500 }}>{value}</div>
+                            </div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
             {/* Activity Timeline */}
             {invoice.activityLogs && invoice.activityLogs.length > 0 && (
                 <div className="card" style={{ marginTop: 20 }}>
@@ -213,6 +235,14 @@ const InvoiceDetail = () => {
                         ))}
                     </div>
                 </div>
+            )}
+
+            {showPaymentModal && (
+                <PaymentModal
+                    invoice={invoice}
+                    onClose={() => setShowPaymentModal(false)}
+                    onSuccess={fetchInvoice}
+                />
             )}
         </div>
     );

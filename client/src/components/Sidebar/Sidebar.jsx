@@ -40,14 +40,24 @@ const Sidebar = () => {
         return true;
     });
 
+    const getLogoUrl = (logo) => {
+        if (!logo) return null;
+        if (logo.startsWith('http')) return logo;
+        return `${import.meta.env.VITE_API_BASE || ''}${logo}`;
+    };
+
+    const logoUrl = getLogoUrl(user?.organization?.logo);
+
     return (
         <aside className="sidebar">
             <div className="sidebar-brand">
-                {user?.organization?.logo ? (
-                    <img src={user.organization.logo.startsWith('http') ? user.organization.logo : `${import.meta.env.VITE_API_BASE || ''}${user.organization.logo}`} alt="Logo" className="brand-logo-img" />
-                ) : (
-                    <div className="brand-icon">Z</div>
-                )}
+                <div className="brand-logo-img" style={{ background: logoUrl ? 'white' : 'transparent' }}>
+                    {logoUrl ? (
+                        <img src={logoUrl} alt="Logo" style={{ width: '100%', height: '100%', objectFit: 'contain' }} />
+                    ) : (
+                        <div className="logo-premium-z sm">Z</div>
+                    )}
+                </div>
                 <div className="brand-text">
                     <span className="brand-name">Zoho Invoice</span>
                     <span className="brand-org">{user?.organization?.name || 'My Organization'}</span>
