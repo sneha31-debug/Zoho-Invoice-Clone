@@ -51,6 +51,18 @@ const InvoiceDetail = () => {
         setActing(false);
     };
 
+    const handleSendEmail = async () => {
+        setActing(true);
+        try {
+            await invoiceAPI.sendEmail(id);
+            toast.success('Invoice sent to customer email');
+            fetchInvoice();
+        } catch (err) {
+            toast.error(err.response?.data?.error || 'Failed to send email');
+        }
+        setActing(false);
+    };
+
     const handleDelete = async () => {
         if (!window.confirm('Are you sure you want to delete this invoice? This cannot be undone.')) return;
         setActing(true);
@@ -84,8 +96,10 @@ const InvoiceDetail = () => {
     if (loading) return <div className="loading-spinner" />;
     if (!invoice) return <div className="empty-state"><h3>Invoice not found</h3></div>;
 
+    const brandColor = invoice.organization?.primaryColor || '#4f46e5';
+
     return (
-        <div className="fade-in">
+        <div className="fade-in" style={{ '--primary': brandColor }}>
             <div className="page-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <Link to="/invoices" className="btn btn-secondary btn-sm"><HiOutlineArrowLeft /></Link>
@@ -109,9 +123,14 @@ const InvoiceDetail = () => {
                                 </>
                             )}
                             {invoice.status === 'DRAFT' && (
-                                <button className="btn btn-secondary btn-sm" onClick={handleMarkSent} disabled={acting}>
-                                    <HiOutlinePaperAirplane /> Mark Sent
-                                </button>
+                                <>
+                                    <button className="btn btn-secondary btn-sm" onClick={handleSendEmail} disabled={acting}>
+                                        <HiOutlinePaperAirplane /> Send Email
+                                    </button>
+                                    <button className="btn btn-secondary btn-sm" onClick={handleMarkSent} disabled={acting}>
+                                        <HiOutlinePaperAirplane /> Mark Sent
+                                    </button>
+                                </>
                             )}
                             <Link to={`/invoices/${id}/edit`} className="btn btn-secondary btn-sm">
                                 <HiOutlinePencil /> Edit

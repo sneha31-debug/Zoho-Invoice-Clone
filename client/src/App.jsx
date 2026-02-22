@@ -24,6 +24,7 @@ import EditInvoice from './pages/Invoices/EditInvoice';
 import CreditNotes from './pages/CreditNotes/CreditNotes';
 import RecurringInvoices from './pages/RecurringInvoices/RecurringInvoices';
 import Users from './pages/Users/Users';
+import GuestInvoiceView from './pages/Invoices/GuestInvoiceView';
 
 function App() {
   return (
@@ -33,6 +34,7 @@ function App() {
           {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
+          <Route path="/public/invoice/:id" element={<GuestInvoiceView />} />
 
           {/* Protected routes */}
           <Route element={<Layout />}>

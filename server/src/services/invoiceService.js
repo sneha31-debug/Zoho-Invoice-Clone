@@ -118,8 +118,11 @@ const findById = async (organizationId, id) => {
 };
 
 const findByIdForPDF = async (organizationId, id) => {
+    const where = { id };
+    if (organizationId) where.organizationId = organizationId;
+
     const invoice = await prisma.invoice.findFirst({
-        where: { id, organizationId },
+        where,
         include: {
             customer: true,
             items: true,

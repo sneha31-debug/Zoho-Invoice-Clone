@@ -96,6 +96,9 @@ model Organization {
   zipCode   String?
   taxId     String?
   currency  Currency @default(USD)
+  primaryColor String?   @default("#4f46e5")
+  invoiceTemplate String? @default("CLASSIC")
+  defaultLanguage String? @default("en")
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 

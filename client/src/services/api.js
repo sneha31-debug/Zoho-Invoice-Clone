@@ -64,6 +64,8 @@ export const invoiceAPI = {
     delete: (id) => api.delete(`/invoices/${id}`),
     fromBillable: (data) => api.post('/invoices/from-billable', data),
     downloadPDF: (id) => api.get(`/invoices/${id}/pdf`, { responseType: 'blob' }),
+    sendEmail: (id, data) => api.post(`/invoices/${id}/send-email`, data),
+    getPublicInvoice: (id) => api.get(`/invoices/public/${id}`),
 };
 
 // Quotes

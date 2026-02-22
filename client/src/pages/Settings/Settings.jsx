@@ -26,7 +26,11 @@ const Settings = () => {
                     zipCode: user.organization.zipCode || '',
                     country: user.organization.country || '',
                     taxId: user.organization.taxId || '',
+                    taxId: user.organization.taxId || '',
                     currency: user.organization.currency || 'USD',
+                    primaryColor: user.organization.primaryColor || '#4f46e5',
+                    invoiceTemplate: user.organization.invoiceTemplate || 'CLASSIC',
+                    defaultLanguage: user.organization.defaultLanguage || 'en',
                     website: user.organization.website || '',
                     logo: user.organization.logo || '',
                 });
@@ -173,6 +177,40 @@ const Settings = () => {
                                     <div className="form-group"><label>Country</label><input value={org.country} onChange={(e) => setOrg({ ...org, country: e.target.value })} /></div>
                                 </div>
                                 <div className="form-group"><label>Tax ID / GST Number</label><input value={org.taxId} onChange={(e) => setOrg({ ...org, taxId: e.target.value })} placeholder="e.g. GST1234567890" /></div>
+
+                                <div className="settings-divider" style={{ margin: '24px 0', borderTop: '1px solid var(--border)' }}></div>
+                                <h3 style={{ fontSize: 16, marginBottom: 16 }}>Branding & Personalization</h3>
+
+                                <div className="form-row">
+                                    <div className="form-group">
+                                        <label>Primary Brand Color</label>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                                            <input type="color" value={org.primaryColor} onChange={(e) => setOrg({ ...org, primaryColor: e.target.value })} style={{ width: 50, height: 40, padding: 0, border: 'none', borderRadius: 4, cursor: 'pointer' }} />
+                                            <input type="text" value={org.primaryColor} onChange={(e) => setOrg({ ...org, primaryColor: e.target.value })} style={{ fontFamily: 'monospace' }} />
+                                        </div>
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Invoice Template</label>
+                                        <select value={org.invoiceTemplate} onChange={(e) => setOrg({ ...org, invoiceTemplate: e.target.value })}>
+                                            <option value="CLASSIC">Classic Professional</option>
+                                            <option value="MODERN">Modern Minimal</option>
+                                            <option value="BOLD">Bold & Vibrant</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="form-group">
+                                    <label>Default Communication Language</label>
+                                    <select value={org.defaultLanguage} onChange={(e) => setOrg({ ...org, defaultLanguage: e.target.value })}>
+                                        <option value="en">English (US)</option>
+                                        <option value="es">Spanish (Español)</option>
+                                        <option value="fr">French (Français)</option>
+                                        <option value="de">German (Deutsch)</option>
+                                        <option value="hi">Hindi (हिन्दी)</option>
+                                    </select>
+                                    <p className="text-muted" style={{ fontSize: 12, marginTop: 4 }}>Used for customer emails and public portal.</p>
+                                </div>
+
                                 <div className="settings-actions"><button type="submit" className="btn btn-primary" disabled={saving}>{saving ? 'Saving…' : 'Save Organization'}</button></div>
                             </form>
                         </div>

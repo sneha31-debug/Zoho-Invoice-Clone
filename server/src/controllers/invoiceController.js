@@ -123,4 +123,40 @@ const downloadPDF = async (req, res, next) => {
     } catch (error) { next(error); }
 };
 
-module.exports = { create, findAll, findById, update, remove, createFromBillable, downloadPDF };
+const sendEmail = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        const { recipientEmail } = req.body;
+        const orgId = req.user.organizationId;
+
+        const invoice = await invoiceService.findByIdForPDF(orgId, id);
+        const pdfBuffer = await pdfService.generateInvoicePDF(invoice);
+
+        const emailService = require('../services/emailService');
+        await emailService.sendInvoiceEmail(invoice, pdfBuffer, recipientEmail);
+
+        // Log the activity
+        const prisma = require('../models/prismaClient');
+        await prisma.activityLog.create({
+            data: {
+                invoiceId: id,
+                action: 'sent',
+                details: `Invoice emailed to ${recipientEmail || invoice.customer.email}`,
+                userId: req.user.id
+            }
+        });
+
+        res.json({ success: true, message: 'Invoice emailed successfully' });
+    } catch (error) { next(error); }
+};
+
+const findPublic = async (req, res, next) => {
+    try {
+        const { id } = req.params;
+        // Search without organization context since it's a public link
+        const invoice = await invoiceService.findByIdForPDF(null, id);
+        res.json({ success: true, data: invoice });
+    } catch (error) { next(error); }
+};
+
+module.exports = { create, findAll, findById, update, remove, createFromBillable, downloadPDF, sendEmail, findPublic };
