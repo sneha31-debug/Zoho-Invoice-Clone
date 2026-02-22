@@ -122,15 +122,15 @@ const InvoiceDetail = () => {
                                     </button>
                                 </>
                             )}
-                            {invoice.status === 'DRAFT' && (
-                                <>
-                                    <button className="btn btn-secondary btn-sm" onClick={handleSendEmail} disabled={acting}>
-                                        <HiOutlinePaperAirplane /> Send Email
-                                    </button>
-                                    <button className="btn btn-secondary btn-sm" onClick={handleMarkSent} disabled={acting}>
-                                        <HiOutlinePaperAirplane /> Mark Sent
-                                    </button>
-                                </>
+                            {['DRAFT', 'SENT', 'VIEWED', 'PARTIALLY_PAID', 'PAID'].includes(String(invoice.status).toUpperCase()) && (
+                                <button className="btn btn-secondary btn-sm" onClick={handleSendEmail} disabled={acting}>
+                                    <HiOutlinePaperAirplane /> Send Email
+                                </button>
+                            )}
+                            {String(invoice.status).toUpperCase() === 'DRAFT' && (
+                                <button className="btn btn-secondary btn-sm" onClick={handleMarkSent} disabled={acting}>
+                                    <HiOutlinePaperAirplane /> Mark Sent
+                                </button>
                             )}
                             <Link to={`/invoices/${id}/edit`} className="btn btn-secondary btn-sm">
                                 <HiOutlinePencil /> Edit

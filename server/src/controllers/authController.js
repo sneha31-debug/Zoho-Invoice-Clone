@@ -43,10 +43,10 @@ const updateProfile = async (req, res, next) => {
 
 const updateOrganization = async (req, res, next) => {
     try {
-        const { name, email, phone, address, city, state, zipCode, country, taxId, currency, website } = req.body;
+        const { name, email, phone, address, city, state, zipCode, country, taxId, currency, website, primaryColor, invoiceTemplate, defaultLanguage } = req.body;
         const org = await prisma.organization.update({
             where: { id: req.user.organizationId },
-            data: { name, email, phone, address, city, state, zipCode, country, taxId, currency, website },
+            data: { name, email, phone, address, city, state, zipCode, country, taxId, currency, website, primaryColor, invoiceTemplate, defaultLanguage },
         });
         res.json({ success: true, data: org });
     } catch (error) { next(error); }

@@ -40,9 +40,9 @@ const CreateInvoice = () => {
         setForm({ ...form, customFields: newFields });
     };
 
-    const subtotal = form.items.reduce((s, l) => s + l.quantity * l.rate, 0);
-    const tax = form.items.reduce((s, l) => s + l.quantity * l.rate * (l.taxRate / 100), 0);
-    const total = subtotal + tax - (form.discountAmount || 0);
+    const subtotal = form.items.reduce((s, l) => s + (Number(l.quantity) || 0) * (Number(l.rate) || 0), 0);
+    const tax = form.items.reduce((s, l) => s + (Number(l.quantity) || 0) * (Number(l.rate) || 0) * ((Number(l.taxRate) || 0) / 100), 0);
+    const total = subtotal + tax - (Number(form.discountAmount) || 0);
 
     const handleSubmit = async (e) => {
         e.preventDefault();

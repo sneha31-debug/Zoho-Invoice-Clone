@@ -59,9 +59,9 @@ const EditInvoice = () => {
         setForm({ ...form, items: newItems });
     };
 
-    const subtotal = form.items.reduce((s, i) => s + (Number(i.quantity) * Number(i.rate)), 0);
-    const tax = form.items.reduce((s, i) => s + ((Number(i.quantity) * Number(i.rate)) * (Number(i.taxRate) / 100)), 0);
-    const total = subtotal + tax - Number(form.discountAmount);
+    const subtotal = form.items.reduce((s, i) => s + (Number(i.quantity) || 0) * (Number(i.rate) || 0), 0);
+    const tax = form.items.reduce((s, i) => s + ((Number(i.quantity) || 0) * (Number(i.rate) || 0)) * ((Number(i.taxRate) || 0) / 100), 0);
+    const total = subtotal + tax - (Number(form.discountAmount) || 0);
 
     const handleSave = async (e) => {
         e.preventDefault();

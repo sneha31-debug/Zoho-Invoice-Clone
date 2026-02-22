@@ -21,6 +21,13 @@ const logActivity = async ({ invoiceId, quoteId, action, details, userId }) => {
     });
 };
 
+/*
+# Phase 4 — UI/UX Polish & Bug Fixes
+- [x] Fix "Send Email" visibility logic in InvoiceDetail
+- [x] Fix Calculation Bug in Create/Edit Invoice
+- [x] Logo Refinement
+*/
+
 /**
  * Get activity logs for an invoice or quote
  * @param {Object} params
