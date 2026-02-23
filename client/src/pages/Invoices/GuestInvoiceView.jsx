@@ -5,6 +5,7 @@ import { HiOutlineDocumentText, HiOutlineDownload, HiOutlineCreditCard } from 'r
 import PaymentModal from '../../components/Payment/PaymentModal';
 import toast from 'react-hot-toast';
 import { useTranslation } from 'react-i18next';
+import './InvoiceTemplates.css';
 
 const GuestInvoiceView = () => {
     const { id } = useParams();

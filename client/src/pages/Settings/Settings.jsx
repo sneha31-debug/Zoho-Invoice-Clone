@@ -26,7 +26,6 @@ const Settings = () => {
                     zipCode: user.organization.zipCode || '',
                     country: user.organization.country || '',
                     taxId: user.organization.taxId || '',
-                    taxId: user.organization.taxId || '',
                     currency: user.organization.currency || 'USD',
                     primaryColor: user.organization.primaryColor || '#4f46e5',
                     invoiceTemplate: user.organization.invoiceTemplate || 'CLASSIC',

@@ -77,6 +77,56 @@ const resources = {
             "status_draft": "Brouillon",
             "status_overdue": "En retard"
         }
+    },
+    de: {
+        translation: {
+            "invoice": "Rechnung",
+            "billed_to": "Rechnung an",
+            "invoice_date": "Rechnungsdatum",
+            "due_date": "Fälligkeitsdatum",
+            "amount_due": "Fälliger Betrag",
+            "description": "Beschreibung",
+            "qty": "Menge",
+            "rate": "Rate",
+            "amount": "Betrag",
+            "subtotal": "Zwischensumme",
+            "tax": "Steuer",
+            "total": "Gesamt",
+            "pay_online": "Online bezahlen",
+            "download_pdf": "PDF herunterladen",
+            "notes": "Notizen",
+            "footer_powered_by": "Präsentiert von Zoho Clone Invoicing",
+            "items": "Positionen",
+            "status_paid": "Bezahlt",
+            "status_sent": "Gesendet",
+            "status_draft": "Entwurf",
+            "status_overdue": "Überfällig"
+        }
+    },
+    hi: {
+        translation: {
+            "invoice": "इनवॉइस",
+            "billed_to": "बिल भेजने का पता",
+            "invoice_date": "इनवॉइस की तारीख",
+            "due_date": "नियत तारीख",
+            "amount_due": "देय राशि",
+            "description": "विवरण",
+            "qty": "मात्रा",
+            "rate": "दर",
+            "amount": "कुल",
+            "subtotal": "उप-कुल",
+            "tax": "कर",
+            "total": "कुल राशि",
+            "pay_online": "ऑनलाइन भुगतान करें",
+            "download_pdf": "PDF डाउनलोड करें",
+            "notes": "नोट्स",
+            "footer_powered_by": "ज़ोहो क्लोन इनवॉइसिंग द्वारा संचालित",
+            "items": "वस्तुएं",
+            "status_paid": "भुगतान किया गया",
+            "status_sent": "भेजा गया",
+            "status_draft": "ड्राफ्ट",
+            "status_overdue": "विलंबित"
+        }
     }
 };
 

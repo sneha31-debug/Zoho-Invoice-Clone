@@ -1,0 +1,52 @@
+/* Invoice Templates */
+
+.invoice-template-classic {
+    font-family: 'Inter', sans-serif;
+}
+
+.invoice-template-classic .card {
+    border-top: 8px solid var(--primary);
+}
+
+.invoice-template-modern {
+    font-family: 'Inter', sans-serif;
+}
+
+.invoice-template-modern .card {
+    border: none;
+    box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+    border-radius: 0;
+}
+
+.invoice-template-modern h2 {
+    letter-spacing: 2px;
+    font-weight: 300 !important;
+}
+
+.invoice-template-bold {
+    font-family: 'Inter', sans-serif;
+}
+
+.invoice-template-bold .card {
+    background: #ffffff;
+    border: 2px solid #000;
+    border-radius: 0;
+}
+
+.invoice-template-bold h2 {
+    background: #000;
+    color: #fff !important;
+    padding: 10px 20px;
+    display: inline-block;
+}
+
+.invoice-template-bold th {
+    background: #f1f5f9;
+    color: #000;
+    border-bottom: 2px solid #000;
+}
+
+/* Primary Color Overrides */
+:root {
+    --primary: var(--brand-color, #4f46e5);
+}

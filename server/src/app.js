@@ -54,6 +54,15 @@ app.use('/api/v1/recurring-invoices', recurringInvoiceRoutes);
 app.use('/api/v1/notifications', notificationRoutes);
 app.use('/api/v1/organizations', organizationRoutes);
 
+// ─── Production Static Files ─────────────────────────────
+if (process.env.NODE_ENV === 'production') {
+    app.use(express.static(path.join(__dirname, '../../client/dist')));
+
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve(__dirname, '../../client/dist', 'index.html'));
+    });
+}
+
 // ─── Error Handler (must be last) ────────────────────────
 app.use(errorHandler);
 

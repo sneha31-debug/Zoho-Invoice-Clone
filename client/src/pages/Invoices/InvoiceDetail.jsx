@@ -5,6 +5,8 @@ import { useAuth } from '../../context/AuthContext';
 import { HiOutlineArrowLeft, HiOutlineCheckCircle, HiOutlinePaperAirplane, HiOutlineTrash, HiOutlinePencil, HiOutlineClock, HiOutlinePrinter } from 'react-icons/hi';
 import toast from 'react-hot-toast';
 import PaymentModal from '../../components/Payment/PaymentModal';
+import { useTranslation } from 'react-i18next';
+import './InvoiceTemplates.css';
 
 const statusBadge = (status) => {
     const map = { PAID: 'badge-success', SENT: 'badge-info', DRAFT: 'badge-secondary', OVERDUE: 'badge-danger', PARTIALLY_PAID: 'badge-warning' };
@@ -20,6 +22,7 @@ const InvoiceDetail = () => {
     const { id } = useParams();
     const navigate = useNavigate();
     const { user } = useAuth();
+    const { t } = useTranslation();
     const [invoice, setInvoice] = useState(null);
     const [loading, setLoading] = useState(true);
     const [acting, setActing] = useState(false);
@@ -97,9 +100,10 @@ const InvoiceDetail = () => {
     if (!invoice) return <div className="empty-state"><h3>Invoice not found</h3></div>;
 
     const brandColor = invoice.organization?.primaryColor || '#4f46e5';
+    const template = invoice.organization?.invoiceTemplate || 'CLASSIC';
 
     return (
-        <div className="fade-in" style={{ '--primary': brandColor }}>
+        <div className={`fade-in invoice-template-${template.toLowerCase()}`} style={{ '--primary': brandColor }}>
             <div className="page-header">
                 <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <Link to="/invoices" className="btn btn-secondary btn-sm"><HiOutlineArrowLeft /></Link>
@@ -150,35 +154,35 @@ const InvoiceDetail = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 24 }}>
                 <div className="card">
-                    <h4 style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>Customer</h4>
+                    <h4 style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>{t('billed_to')}</h4>
                     <div style={{ fontWeight: 600 }}>{invoice.customer?.displayName}</div>
                     <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>{invoice.customer?.email}</div>
                     <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>{invoice.customer?.companyName}</div>
                 </div>
                 <div className="card">
-                    <h4 style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>Summary</h4>
+                    <h4 style={{ fontSize: 13, color: 'var(--text-muted)', marginBottom: 8, textTransform: 'uppercase' }}>{t('summary') || 'Summary'}</h4>
                     <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, fontSize: 14 }}>
-                        <span style={{ color: 'var(--text-muted)' }}>Due Date</span><span>{new Date(invoice.dueDate).toLocaleDateString()}</span>
-                        <span style={{ color: 'var(--text-muted)' }}>Total</span><span style={{ fontWeight: 700 }}>${Number(invoice.totalAmount).toLocaleString()}</span>
-                        <span style={{ color: 'var(--text-muted)' }}>Paid</span><span>${Number(invoice.amountPaid).toLocaleString()}</span>
-                        <span style={{ color: 'var(--text-muted)' }}>Balance Due</span><span style={{ fontWeight: 700, color: invoice.balanceDue > 0 ? 'var(--danger)' : 'var(--success)' }}>${Number(invoice.balanceDue).toLocaleString()}</span>
+                        <span style={{ color: 'var(--text-muted)' }}>{t('due_date')}</span><span>{new Date(invoice.dueDate).toLocaleDateString()}</span>
+                        <span style={{ color: 'var(--text-muted)' }}>{t('total')}</span><span style={{ fontWeight: 700 }}>{invoice.currency} {Number(invoice.totalAmount).toLocaleString()}</span>
+                        <span style={{ color: 'var(--text-muted)' }}>{t('paid') || 'Paid'}</span><span>{invoice.currency} {Number(invoice.amountPaid).toLocaleString()}</span>
+                        <span style={{ color: 'var(--text-muted)' }}>{t('balance_due') || 'Balance Due'}</span><span style={{ fontWeight: 700, color: invoice.balanceDue > 0 ? 'var(--danger)' : 'var(--success)' }}>{invoice.currency} {Number(invoice.balanceDue).toLocaleString()}</span>
                     </div>
                 </div>
             </div>
 
             <div className="card">
-                <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 700 }}>Line Items</h3>
+                <h3 style={{ marginBottom: 16, fontSize: 16, fontWeight: 700 }}>{t('items')}</h3>
                 <div className="table-container">
                     <table>
-                        <thead><tr><th>Description</th><th>Qty</th><th>Rate</th><th>Tax %</th><th>Amount</th></tr></thead>
+                        <thead><tr><th>{t('description')}</th><th>{t('qty')}</th><th>{t('rate')}</th><th>{t('tax')} %</th><th>{t('amount')}</th></tr></thead>
                         <tbody>
                             {invoice.items?.map((item) => (
                                 <tr key={item.id}>
                                     <td>{item.description || item.item?.name}</td>
                                     <td>{item.quantity}</td>
-                                    <td>${Number(item.rate).toFixed(2)}</td>
+                                    <td>{invoice.currency} {Number(item.rate).toFixed(2)}</td>
                                     <td>{item.taxRate}%</td>
-                                    <td style={{ fontWeight: 600 }}>${Number(item.amount).toFixed(2)}</td>
+                                    <td style={{ fontWeight: 600 }}>{invoice.currency} {Number(item.amount).toFixed(2)}</td>
                                 </tr>
                             ))}
                         </tbody>
@@ -186,11 +190,11 @@ const InvoiceDetail = () => {
                 </div>
                 <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: 16 }}>
                     <div style={{ width: 280 }}>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 14 }}><span>Subtotal</span><span>${Number(invoice.subtotal).toFixed(2)}</span></div>
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 14 }}><span>Tax</span><span>${Number(invoice.taxAmount).toFixed(2)}</span></div>
-                        {invoice.discountAmount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 14 }}><span>Discount</span><span>-${Number(invoice.discountAmount).toFixed(2)}</span></div>}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 14 }}><span>{t('subtotal')}</span><span>{invoice.currency} {Number(invoice.subtotal).toFixed(2)}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 14 }}><span>{t('tax')}</span><span>{invoice.currency} {Number(invoice.taxAmount).toFixed(2)}</span></div>
+                        {invoice.discountAmount > 0 && <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 14 }}><span>{t('discount') || 'Discount'}</span><span>-{invoice.currency} {Number(invoice.discountAmount).toFixed(2)}</span></div>}
                         <hr style={{ border: 'none', borderTop: '2px solid var(--border)', margin: '8px 0' }} />
-                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 18, fontWeight: 700 }}><span>Total</span><span>${Number(invoice.totalAmount).toFixed(2)}</span></div>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '6px 0', fontSize: 18, fontWeight: 700 }}><span>{t('total')}</span><span>{invoice.currency} {Number(invoice.totalAmount).toFixed(2)}</span></div>
                     </div>
                 </div>
             </div>
