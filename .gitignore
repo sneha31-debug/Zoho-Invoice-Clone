@@ -16,8 +16,6 @@ client/dist/
 .DS_Store
 Thumbs.db
 
-# Prisma
-server/prisma/migrations/
 
 # Logs
 *.log
