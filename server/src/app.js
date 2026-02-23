@@ -1,7 +1,6 @@
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
-// const { PORT } = require('./config/env');
 const errorHandler = require('./middlewares/errorHandler');
 
 // Import routes
@@ -71,14 +70,17 @@ const { startRecurringInvoiceCron } = require('./cron/recurringInvoiceCron');
 const { startOverdueInvoiceCron } = require('./cron/overdueInvoiceCron');
 
 // ─── Start Server ────────────────────────────────────────
-const port = process.env.PORT || 5000;
+if (process.env.NODE_ENV !== 'test') {
+    const port = process.env.PORT || 5000;
 
-app.listen(port, () => {
-  console.log(`🚀 Server running on port ${port}`);
-  console.log(`📋 Health check: /api/v1/health`);
-  startRecurringInvoiceCron();
-  startOverdueInvoiceCron();
-});
+    app.listen(port, () => {
+        console.log(`🚀 Server running on port ${port}`);
+        console.log(`📋 Health check: /api/v1/health`);
+        startRecurringInvoiceCron();
+        startOverdueInvoiceCron();
+    });
+}
+
 
 
 module.exports = app;
